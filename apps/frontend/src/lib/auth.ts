@@ -2,9 +2,11 @@ import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
   baseURL: "http://localhost:8080/api/v1/identity/auth",
+  
   fetchOptions: {
     credentials: "include",
   },
+  
 });
 
-export const { signIn, signUp, useSession } = authClient;
+export const { signIn, signUp, useSession, } = authClient;

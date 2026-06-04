@@ -2,7 +2,7 @@
 
 ## Project Status
 
-M0/M1 in progress. Identity service and Gateway service have initial implementations. Frontend has auth client configured. Other services are empty scaffolds.
+M1 Identity + Gateway completo. Email/password y Google OAuth funcionando. Frontend con login, register y home page. Otros servicios son scaffolds vacíos.
 
 ## Architecture
 
@@ -33,9 +33,11 @@ apps/
 
 **Env vars:**
 - `BETTER_AUTH_SECRET` — encryption secret
-- `BETTER_AUTH_URL` — service URL (for cookie domain)
+- `BETTER_AUTH_URL` — service URL (must be `http://localhost:3000`, NOT the gateway URL — Better Auth uses this for internal operations and callbacks)
 - `FRONTEND_URL` — frontend origin for CORS (default: `http://localhost:5173`)
 - `DATABASE_URL` — PostgreSQL connection string
+- `GOOGLE_CLIENT_ID` — Google OAuth client ID
+- `GOOGLE_CLIENT_SECRET` — Google OAuth client secret
 
 **Commands:**
 ```bash
