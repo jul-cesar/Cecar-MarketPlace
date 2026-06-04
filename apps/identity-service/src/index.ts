@@ -1,11 +1,13 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { logger } from 'hono/logger'
 import { auth } from './lib/auth.js';
 
 const app = new Hono()
 
+app.use("*", logger());
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/auth/*", (c) => auth.handler(c.req.raw));
 
 app.get("/internal/v1/validate-session", async (c) => {
   const session = await auth.api.getSession({

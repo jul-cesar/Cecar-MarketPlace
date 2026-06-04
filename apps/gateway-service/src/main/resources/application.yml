@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: identity-auth
+              uri: http://localhost:3000
+              predicates:
+                - Path=/api/v1/identity/**
+              filters:
+                - StripPrefix=3
