@@ -108,6 +108,14 @@ public class AuthFilter extends OncePerRequestFilter {
                 }
             }
         }
+        String secureCookieName = "__Secure-" + cookieName;
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(secureCookieName)) {
+                    return cookie.getValue();
+                }
+            }
+        }
         return null;
     }
 
