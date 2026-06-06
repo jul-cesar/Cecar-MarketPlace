@@ -53,11 +53,13 @@ public class AuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String sessionCookie = extractCookie(request, "better-auth.session_token");
+        String[] cookieResult = extractCookie(request, "better-auth.session_token");
+        String sessionCookie = cookieResult[0];
+        String cookieName = cookieResult[1];
 
         log.info("[Gateway] Session cookie found: {}", sessionCookie != null ? "YES" : "NO");
         if (sessionCookie != null) {
-            log.info("[Gateway] Cookie length: {}", sessionCookie.length());
+            log.info("[Gateway] Cookie name: {}, length: {}", cookieName, sessionCookie.length());
         }
 
         if (sessionCookie == null) {
@@ -67,7 +69,7 @@ public class AuthFilter extends OncePerRequestFilter {
         }
 
         try {
-            SessionInfo sessionInfo = validateSession(sessionCookie);
+            SessionInfo sessionInfo = validateSession(sessionCookie, cookieName);
 
             if (sessionInfo == null) {
                 log.warn("[Gateway] {} {} -> 401 Invalid session", method, path);
@@ -104,12 +106,12 @@ public class AuthFilter extends OncePerRequestFilter {
         return HttpMethod.OPTIONS.matches(request.getMethod());
     }
 
-    private String extractCookie(HttpServletRequest request, String cookieName) {
+    private String[] extractCookie(HttpServletRequest request, String cookieName) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals(cookieName)) {
-                    return cookie.getValue();
+                    return new String[]{cookie.getValue(), cookieName};
                 }
             }
         }
@@ -117,21 +119,22 @@ public class AuthFilter extends OncePerRequestFilter {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals(secureCookieName)) {
-                    return cookie.getValue();
+                    return new String[]{cookie.getValue(), secureCookieName};
                 }
             }
         }
-        return null;
+        return new String[]{null, cookieName};
     }
 
-    private SessionInfo validateSession(String sessionCookie) {
+    private SessionInfo validateSession(String sessionCookie, String cookieName) {
         try {
             return restClient.get()
                     .uri("/internal/v1/validate-session")
-                    .header("Cookie", "better-auth.session_token=" + sessionCookie)
+                    .header("Cookie", cookieName + "=" + sessionCookie)
                     .retrieve()
                     .body(SessionInfo.class);
         } catch (Exception e) {
+            log.error("[Gateway] Session validation error: {}", e.getMessage());
             return null;
         }
     }
