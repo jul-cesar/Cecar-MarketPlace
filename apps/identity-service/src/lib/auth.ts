@@ -11,8 +11,12 @@ export const auth = betterAuth({
     }),
     basePath: "/auth",
     trustedOrigins: [
-        process.env.FRONTEND_URL || "http://localhost:5173",
-    ],
+        "http://localhost",
+        "http://localhost:5173",
+        "https://cecarhub.com",
+        "https://www.cecarhub.com",
+        process.env.FRONTEND_URL || "http://localhost",
+    ].filter(Boolean),
     socialProviders: {
         google: { 
             clientId: process.env.GOOGLE_CLIENT_ID as string, 

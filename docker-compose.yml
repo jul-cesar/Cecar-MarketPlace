@@ -6,11 +6,11 @@ services:
       context: ./apps/frontend
       dockerfile: Dockerfile
       args:
-        VITE_GATEWAY_BASE_URL: ${VITE_GATEWAY_BASE_URL}
+        VITE_GATEWAY_BASE_URL: ${VITE_GATEWAY_BASE_URL:-https://cecarhub.com/api/v1}
     ports:
       - "127.0.0.1:8088:80"
     environment:
-      - VITE_GATEWAY_BASE_URL=${VITE_GATEWAY_BASE_URL}
+      - VITE_GATEWAY_BASE_URL=${VITE_GATEWAY_BASE_URL:-https://cecarhub.com/api/v1}
     depends_on:
       - gateway
     networks:
@@ -44,7 +44,7 @@ services:
       - identity-service.url=http://identity:3000
       - catalog-service.url=http://catalog:8081
       - media-service.url=http://media:3001
-      - frontend.url=${FRONTEND_URL}
+      - frontend.url=${FRONTEND_URL:-https://cecarhub.com}
     depends_on:
       - identity
       - catalog

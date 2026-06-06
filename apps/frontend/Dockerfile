@@ -7,6 +7,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+ARG VITE_GATEWAY_BASE_URL
+ENV VITE_GATEWAY_BASE_URL=${VITE_GATEWAY_BASE_URL}
 RUN npm run build
 
 # Production stage
