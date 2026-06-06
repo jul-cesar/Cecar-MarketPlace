@@ -45,6 +45,7 @@ export interface ListingSummaryResponse {
   id: UUID
   sellerId: string
   title: string
+  description: string
   price: string | null
   listingType: ListingType
   condition: ListingCondition | null
@@ -53,6 +54,7 @@ export interface ListingSummaryResponse {
   viewCount: number
   coverImageUrl: string | null
   categories: CategoryResponse[]
+  images: ListingImageResponse[]
   createdAt: Instant
   updatedAt: Instant
 }

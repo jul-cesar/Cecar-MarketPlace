@@ -9,11 +9,13 @@ import com.cecar.marketplace_catalog.domain.ListingCondition;
 import com.cecar.marketplace_catalog.domain.ListingStatus;
 import com.cecar.marketplace_catalog.domain.ListingType;
 import com.cecar.marketplace_catalog.dto.category.CategoryResponse;
+import com.cecar.marketplace_catalog.dto.listingImage.ListingImageResponse;
 
 public record ListingSummaryResponse(
         UUID id,
         String sellerId,
         String title,
+        String description,
         BigDecimal price,
         ListingType listingType,
         ListingCondition condition,
@@ -22,6 +24,7 @@ public record ListingSummaryResponse(
         Integer viewCount,
         String coverImageUrl,
         List<CategoryResponse> categories,
+        List<ListingImageResponse> images,
         Instant createdAt,
         Instant updatedAt
 ) {

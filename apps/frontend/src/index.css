@@ -129,3 +129,18 @@
     @apply font-sans;
     }
 }
+
+@layer utilities {
+  @keyframes spotlight-right {
+    from { transform: translateX(160px) scale(1.04); opacity: 0; }
+    to   { transform: translateX(0)    scale(1);    opacity: 1; }
+  }
+
+  @keyframes spotlight-left {
+    from { transform: translateX(-160px) scale(1.04); opacity: 0; }
+    to   { transform: translateX(0)     scale(1);    opacity: 1; }
+  }
+
+  .animate-spotlight-right { animation: spotlight-right 900ms cubic-bezier(.2,.8,.2,1) both; }
+  .animate-spotlight-left  { animation: spotlight-left  900ms cubic-bezier(.2,.8,.2,1) both; }
+}
