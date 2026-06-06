@@ -5,10 +5,12 @@ services:
     build:
       context: ./apps/frontend
       dockerfile: Dockerfile
+      args:
+        VITE_GATEWAY_BASE_URL: ${VITE_GATEWAY_BASE_URL}
     ports:
-      - "80:80"
+      - "127.0.0.1:8088:80"
     environment:
-      - VITE_GATEWAY_BASE_URL=${VITE_GATEWAY_BASE_URL:-http://localhost:8080}
+      - VITE_GATEWAY_BASE_URL=${VITE_GATEWAY_BASE_URL}
     depends_on:
       - gateway
     networks:
@@ -19,12 +21,12 @@ services:
     build:
       context: ./apps/identity-service
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:80}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
       - DATABASE_URL=${IDENTITY_DATABASE_URL}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
@@ -37,12 +39,12 @@ services:
       context: ./apps/gateway-service
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
       - identity-service.url=http://identity:3000
       - catalog-service.url=http://catalog:8081
       - media-service.url=http://media:3001
-      - frontend.url=${FRONTEND_URL:-http://localhost}
+      - frontend.url=${FRONTEND_URL}
     depends_on:
       - identity
       - catalog
@@ -55,8 +57,8 @@ services:
     build:
       context: ./apps/catalog-service
       dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
+    expose:
+      - "8081"
     environment:
       - SPRING_DATASOURCE_URL=${CATALOG_DATABASE_URL}
       - SPRING_DATASOURCE_USERNAME=${CATALOG_DATABASE_USERNAME}
@@ -69,8 +71,8 @@ services:
     build:
       context: ./apps/media-service
       dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     environment:
       - UPLOADTHING_TOKEN=${UPLOADTHING_TOKEN}
     networks:
