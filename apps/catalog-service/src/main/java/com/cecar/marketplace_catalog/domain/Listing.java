@@ -6,16 +6,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,29 +20,22 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "listing")
-public class Listing {
+public class Listing extends BaseEntity {
 
-    @Id
-    @Column(nullable = false, updatable = false)
-    private UUID id;
-
-    @Column(name = "seller_id", nullable = false)
-    private UUID sellerId;
+    @Column(name = "seller_id", nullable = false, length = 191)
+    private String sellerId;
 
     @Column(nullable = false, length = 200)
     private String title;
@@ -79,7 +69,6 @@ public class Listing {
     private Integer viewCount;
 
     @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private List<ListingImage> images = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -88,14 +77,7 @@ public class Listing {
             joinColumns = @JoinColumn(name = "listing_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
-    @Builder.Default
     private Set<Category> categories = new HashSet<>();
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
 
     public void addImage(ListingImage image) {
         images.add(image);
@@ -109,22 +91,11 @@ public class Listing {
 
     @PrePersist
     void prePersist() {
-        Instant now = Instant.now();
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
         if (status == null) {
             status = ListingStatus.ACTIVE;
         }
         if (viewCount == null) {
             viewCount = 0;
         }
-        createdAt = now;
-        updatedAt = now;
-    }
-
-    @PreUpdate
-    void preUpdate() {
-        updatedAt = Instant.now();
     }
 }

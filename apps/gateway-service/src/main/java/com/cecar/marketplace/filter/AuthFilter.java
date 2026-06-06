@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -87,7 +89,14 @@ public class AuthFilter extends OncePerRequestFilter {
 
     private boolean shouldSkipAuth(String path) {
         return path.startsWith("/api/v1/identity/") ||
-               path.startsWith("/actuator/");
+                path.equals("/api/v1/media") ||
+                path.startsWith("/api/v1/media/") ||
+                path.startsWith("/actuator/");
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return HttpMethod.OPTIONS.matches(request.getMethod());
     }
 
     private String extractCookie(HttpServletRequest request, String cookieName) {
@@ -116,8 +125,10 @@ public class AuthFilter extends OncePerRequestFilter {
 
     private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"" + message + "\"}");
+        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        response.getWriter().write("""
+                {"type":"unauthorized","title":"Unauthorized","status":401,"detail":"%s"}
+                """.formatted(message));
     }
 
     private record SessionInfo(String userId, String email, String role) {}

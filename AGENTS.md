@@ -1,117 +1,47 @@
 # AGENTS.md
 
-## Project Status
+## Repo Shape
 
-M1 Identity + Gateway completo. Email/password y Google OAuth funcionando. Frontend con login, register y home page. Otros servicios son scaffolds vacíos.
+- Microservices monorepo under `apps/`; there is no root workspace manifest, so run commands from the target service directory.
+- Node services currently use npm lockfiles (`package-lock.json`); do not assume pnpm workspace commands.
+- Implemented services: `frontend/`, `identity-service`, `gateway-service`, `catalog-service`, and a minimal `media-service`; `admin-service/` and `messaging-service/` are placeholders.
+- Cross-service references are logical UUIDs/API calls only; do not add foreign keys between service databases.
 
-## Architecture
+## Commands
 
-Microservices monorepo. Each service has its own database — **no foreign keys across services**. Cross-service references are logical (UUID) or via API only.
+- Frontend (`apps/frontend`): `npm run dev`, `npm run build` (`tsc -b && vite build`), `npm run lint`, `npm run preview`.
+- Identity (`apps/identity-service`): `npm run dev`, `npm run build`, `npm run start`, `npx drizzle-kit push` for Drizzle schema pushes.
+- Media (`apps/media-service`): `npm run dev`, `npm run build`, `npm run start`; UploadThing files are served by Hono at `/api/uploadthing`.
+- Gateway (`apps/gateway-service`): `./mvnw.cmd spring-boot:run`, `./mvnw.cmd compile`, `./mvnw.cmd test`, focused test `./mvnw.cmd -Dtest=MarketplaceApplicationTests test`.
+- Catalog (`apps/catalog-service`): `./mvnw.cmd spring-boot:run`, `./mvnw.cmd compile`, `./mvnw.cmd test`, focused test `./mvnw.cmd -Dtest=MarketplaceCatalogApplicationTests test`.
+- There are no frontend, identity, or media test scripts in `package.json` yet.
 
-```
-apps/
-  frontend/            React + Vite + shadcn/ui + TanStack Query + Zustand
-  gateway-service/     Spring Cloud Gateway (Java 21)
-  identity-service/    Hono + Better Auth + Drizzle + PostgreSQL
-  media-service/       Node.js + UploadThing
-  catalog-service/     Spring Boot 3.x (Java 21)
-  messaging-service/   Spring Boot 3.x (Java 21)
-  admin-service/       Spring Boot 3.x (Java 21)
-```
+## Ports And Routing
 
-## Identity Service (In Progress)
+- Frontend Vite dev server defaults to `http://localhost:5173`.
+- Identity listens on `3000`; Better Auth is mounted at `/auth/*` and session validation at `/internal/v1/validate-session`.
+- Media listens on `3001`; gateway `/api/v1/media/**` rewrites to media `/api/uploadthing`.
+- Gateway listens on `8080` and uses Spring Cloud Gateway WebMVC config under `spring.cloud.gateway.server.webmvc.routes`.
+- Gateway routes `/api/v1/identity/**` to identity and `/api/v1/catalog/**` to catalog, both with `StripPrefix=3`; downstream controllers should not include `/api/v1/...` in their mappings.
+- Catalog listens on `8081`; its controllers are mounted at service-local paths such as `/listings` and `/categories`.
 
-**Stack:** Hono + Better Auth + Drizzle ORM + PostgreSQL (Neon)
+## Auth And CORS
 
-**Endpoints:**
-- `POST/GET /auth/*` — Better Auth handler (login, register, session)
-- `GET /internal/v1/validate-session` — Gateway calls this to validate session cookies, returns `{ userId, email, role }`
+- Frontend Better Auth client base URL is `http://localhost:8080/api/v1/identity/auth`; Better Auth client does not append `/auth` automatically here.
+- Gateway `AuthFilter` skips `/api/v1/identity/**`, `/actuator/**`, and all `OPTIONS`; other routes require the `better-auth.session_token` cookie.
+- Gateway validates sessions by calling identity `/internal/v1/validate-session`, then injects `X-User-Id`, `X-User-Email`, and `X-User-Role` headers for downstream services.
+- Gateway owns CORS via `CorsConfig`; do not add duplicate CORS handling to downstream services.
 
-**Gateway routing:**
-- `/api/v1/identity/**` → identity-service with StripPrefix=3
-- Better Auth `basePath: "/auth"` → final path: `/api/v1/identity/auth/sign-in/email`
+## Data And Migrations
 
-**Env vars:**
-- `BETTER_AUTH_SECRET` — encryption secret
-- `BETTER_AUTH_URL` — service URL (must be `http://localhost:3000`, NOT the gateway URL — Better Auth uses this for internal operations and callbacks)
-- `FRONTEND_URL` — frontend origin for CORS (default: `http://localhost:5173`)
-- `DATABASE_URL` — PostgreSQL connection string
-- `GOOGLE_CLIENT_ID` — Google OAuth client ID
-- `GOOGLE_CLIENT_SECRET` — Google OAuth client secret
-
-**Commands:**
-```bash
-npm run dev      # tsx watch src/index.ts
-npm run build    # tsc
-npx drizzle-kit push  # apply schema changes
-```
-
-## Gateway Service (In Progress)
-
-**Stack:** Spring Boot 3.5.x + Spring Cloud 2025.0.x + Spring Cloud Gateway (WebMVC) + Java 21
-
-**Port:** 8080
-
-**Routes:**
-- `/api/v1/identity/**` → identity-service:3000 (StripPrefix=3)
-
-**Config:** Spring Cloud Gateway WebMVC usa `spring.cloud.gateway.server.webmvc.routes` (no `spring.cloud.gateway.routes`)
-
-**Auth filter:** Servlet filter validates sessions via identity-service, injects `X-User-Id`, `X-User-Email`, `X-User-Role` headers. Skips auth for `/api/v1/identity/**` and `/actuator/**`.
-
-**CORS:** Gateway handles CORS centrally. **Do not add CORS middleware to downstream services** (causes duplicate headers).
-
-**Env vars (application.yml):**
-- `frontend.url` — frontend origin for CORS (default: `http://localhost:5173`)
-- `identity-service.url` — identity service URL (default: `http://localhost:3000`)
-
-**Commands:**
-```bash
-.\mvnw.cmd spring-boot:run   # start gateway
-.\mvnw.cmd compile            # compile
-```
-
-## Frontend (In Progress)
-
-**Stack:** React 19 + Vite + shadcn/ui + React Router + Better Auth client
-
-**Auth client:** `src/lib/auth.ts` — `createAuthClient` from `better-auth/react` with `baseURL: "http://localhost:8080/api/v1/identity/auth"` (Gateway URL + `/auth` basePath — Better Auth client does NOT auto-append basePath)
-
-**Commands:**
-```bash
-npm run dev      # vite dev server (port 5173)
-npm run build    # tsc + vite build
-npm run lint     # eslint
-```
-
-## Auth Flow
-
-Google OAuth -> Better Auth -> HttpOnly session cookie -> Gateway validates -> internal headers (`X-User-Id`, `X-User-Email`, `X-User-Role`) propagated to downstream services. Gateway centralizes auth; services trust the internal Docker network.
-
-Identity service restricts login to `@cecar.edu.co` emails.
+- Identity uses Better Auth + Drizzle (`src/db/schema.ts`, `drizzle.config.ts`) and reads `DATABASE_URL` from dotenv.
+- Identity env vars used in code: `DATABASE_URL`, `FRONTEND_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`; Better Auth also needs its secret/URL in the environment for real auth flows.
+- Catalog uses Spring Data JPA with `spring.jpa.hibernate.ddl-auto=validate`; change schema through Flyway migrations in `apps/catalog-service/src/main/resources/db/migration`.
+- Catalog expects gateway-provided `X-User-Id` headers for owner-scoped listing operations.
 
 ## API Conventions
 
-- Public: `/api/v1/*`
-- Internal (service-to-service): `/internal/v1/*`
-- Errors: RFC 7807 Problem Details
-- DTOs: never expose JPA entities; use MapStruct for mapping
-- IDs: UUID everywhere
-
-## Database
-
-Single PostgreSQL instance, multiple databases: `identity_db`, `catalog_db`, `messaging_db`, `admin_db`. Migrations via Flyway (Spring Boot services).
-
-## Conventions
-
-- Package manager: **pnpm** (Node services)
-- Java: **21 LTS**
-- Node: **LTS**
-- Branching: `main` / `develop` / `feature/*`
-- Frontend structure: feature-based (`features/auth`, `features/catalog`, etc.)
-- Layouts: PublicLayout, AppLayout, AdminLayout
-
-## Key References
-
-- `README.md` — full architecture, stack, and ADR summary
-- `docs/backlog.md` — milestone/epic/task breakdown with implementation order
+- Public API path prefix is `/api/v1/*` at the gateway; internal service-to-service endpoints use `/internal/v1/*`.
+- Java APIs return RFC 7807 `ProblemDetail` errors via controller advice; keep that shape for new errors.
+- Do not expose JPA entities directly from Spring controllers; use DTOs and MapStruct mappers.
+- Use UUIDs for domain IDs and cross-service references.

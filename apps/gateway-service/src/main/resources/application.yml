@@ -10,8 +10,20 @@ spring:
         webmvc:
           routes:
             - id: identity-auth
-              uri: http://localhost:3000
+              uri: ${identity-service.url:http://localhost:3000}
               predicates:
                 - Path=/api/v1/identity/**
               filters:
                 - StripPrefix=3
+            - id: catalog-service
+              uri: ${catalog-service.url:http://localhost:8081}
+              predicates:
+                - Path=/api/v1/catalog/**
+              filters:
+                - StripPrefix=3
+            - id: media-service
+              uri: ${media-service.url:http://localhost:3001}
+              predicates:
+                - Path=/api/v1/media/**
+              filters:
+                - RewritePath=/api/v1/media(?<remaining>/?.*), /api/uploadthing$\{remaining}

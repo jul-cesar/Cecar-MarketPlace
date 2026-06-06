@@ -1,7 +1,8 @@
 import { createAuthClient } from "better-auth/react";
+import { apiRoutes } from "@/lib/api";
 
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:8080/api/v1/identity/auth",
+  baseURL: apiRoutes.auth,
   
   fetchOptions: {
     credentials: "include",
@@ -9,4 +10,4 @@ export const authClient = createAuthClient({
   
 });
 
-export const { signIn, signUp, useSession, } = authClient;
+export const { useSession } = authClient;
