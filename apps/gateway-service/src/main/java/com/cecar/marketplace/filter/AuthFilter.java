@@ -55,6 +55,11 @@ public class AuthFilter extends OncePerRequestFilter {
 
         String sessionCookie = extractCookie(request, "better-auth.session_token");
 
+        log.info("[Gateway] Session cookie found: {}", sessionCookie != null ? "YES" : "NO");
+        if (sessionCookie != null) {
+            log.info("[Gateway] Cookie length: {}", sessionCookie.length());
+        }
+
         if (sessionCookie == null) {
             log.warn("[Gateway] {} {} -> 401 Missing session cookie", method, path);
             sendUnauthorized(response, "Missing session cookie");
