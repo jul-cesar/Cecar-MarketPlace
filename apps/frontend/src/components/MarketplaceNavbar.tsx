@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ModeToggle } from "./mode-toggle"
 
 export interface MarketplaceUser {
   id: string
@@ -55,11 +56,9 @@ export function MarketplaceNavbar({ user }: MarketplaceNavbarProps) {
           </div>
           <div>
             <p className="font-heading text-base font-semibold tracking-tight">
-              CECAR Market
+              Cecarhub
             </p>
-            <p className="hidden text-xs text-muted-foreground sm:block">
-              Campus exchange club
-            </p>
+           
           </div>
         </div>
 
@@ -120,6 +119,7 @@ export function MarketplaceNavbar({ user }: MarketplaceNavbarProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <ModeToggle/>
         </div>
       </div>
     </header>

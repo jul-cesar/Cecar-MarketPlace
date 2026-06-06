@@ -317,7 +317,7 @@ export default function CreateListingPage() {
 
   if (isPending) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-[#f7f5ef]">
+      <div className="flex min-h-svh items-center justify-center ">
         <div className="rounded-full border bg-background/80 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur">
           Preparando el editor de publicacion...
         </div>
@@ -330,7 +330,7 @@ export default function CreateListingPage() {
   }
 
   return (
-    <div className="min-h-svh bg-[#f7f5ef] text-foreground">
+    <div className="min-h-svh text-foreground">
       <MarketplaceNavbar user={data.user} />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
@@ -709,10 +709,10 @@ export default function CreateListingPage() {
           </Card>
 
           <aside className="lg:sticky lg:top-6 lg:h-fit">
-            <Card className="rounded-[2rem] bg-foreground text-background shadow-xl shadow-foreground/10">
+            <Card className="rounded-[2rem]   shadow-xl shadow-foreground/10">
               <CardHeader>
                 <CardTitle className="text-xl">Vista rapida</CardTitle>
-                <CardDescription className="text-background/65">
+                <CardDescription className="">
                   Asi se sentira tu publicacion en el marketplace.
                 </CardDescription>
               </CardHeader>
@@ -726,12 +726,12 @@ export default function CreateListingPage() {
                     />
                   ) : (
                     <div className="flex aspect-[4/3] items-center justify-center border border-dashed border-background/20">
-                      <ImagePlus className="size-10 text-background/50" />
+                      <ImagePlus className="size-10 " />
                     </div>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <div className="inline-flex rounded-full bg-background/10 px-3 py-1 text-xs font-medium text-background/80">
+                  <div className="inline-flex rounded-full bg-background/10 px-3 py-1 text-xs font-medium ">
                     {listingTypes.find((type) => type.value === selectedType)?.label}
                   </div>
                   <h2 className="font-heading text-2xl font-semibold leading-tight">
@@ -741,7 +741,7 @@ export default function CreateListingPage() {
                     {priceValue.trim() ? formatCopPrice(priceValue) : "Precio opcional"}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl bg-background/10 p-3 text-sm text-background/75">
+                <div className="flex items-center gap-2 rounded-2xl bg-background/10 p-3 text-sm ">
                   <MapPin className="size-4" />
                   {locationValue.trim() || "Punto de encuentro en campus"}
                 </div>

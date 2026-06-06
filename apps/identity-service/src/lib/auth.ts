@@ -4,14 +4,6 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db/index.js";
 import * as schema from "../db/schema.js"; 
 
-console.log('[auth] Initializing Better Auth with:', {
-    database: 'pg',
-    basePath: '/auth',
-    googleClientId: process.env.GOOGLE_CLIENT_ID ? 'SET' : 'MISSING',
-    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'MISSING',
-    betterAuthUrl: process.env.BETTER_AUTH_URL,
-});
-
 export const auth = betterAuth({
     secret: process.env.BETTER_AUTH_SECRET,
     database: drizzleAdapter(db, {

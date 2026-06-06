@@ -57,11 +57,6 @@ public class AuthFilter extends OncePerRequestFilter {
         String sessionCookie = cookieResult[0];
         String cookieName = cookieResult[1];
 
-        log.info("[Gateway] Session cookie found: {}", sessionCookie != null ? "YES" : "NO");
-        if (sessionCookie != null) {
-            log.info("[Gateway] Cookie name: {}, length: {}", cookieName, sessionCookie.length());
-        }
-
         if (sessionCookie == null) {
             log.warn("[Gateway] {} {} -> 401 Missing session cookie", method, path);
             sendUnauthorized(response, "Missing session cookie");
