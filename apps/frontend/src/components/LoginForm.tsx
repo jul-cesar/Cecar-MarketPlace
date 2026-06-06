@@ -1,7 +1,7 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { GraduationCap, ShieldCheck, Sparkles } from "lucide-react"
+import { GraduationCap, ShieldCheck } from "lucide-react"
 import { authClient } from "@/lib/auth"
 
 function GoogleIcon({ className }: { className?: string }) {
