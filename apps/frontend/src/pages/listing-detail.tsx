@@ -1,6 +1,17 @@
 import * as React from "react"
 import { Link, Navigate, useNavigate, useParams } from "react-router"
-import { ArrowLeft, ImageIcon, Loader2, MapPin, Tag } from "lucide-react"
+import {
+  ArrowLeft,
+  Eye,
+  ImageIcon,
+  Loader2,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
+  Tag,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { MarketplaceNavbar } from "@/components/MarketplaceNavbar"
@@ -9,7 +20,11 @@ import { Card, CardContent } from "@/components/ui/card"
 import { apiRoutes } from "@/lib/api"
 import { useSession } from "@/lib/auth"
 import { deleteImageFiles } from "@/lib/uploadthing"
-import type { ListingDetailResponse } from "@/lib/mock-marketplace"
+import type {
+  ListingCondition,
+  ListingDetailResponse,
+  ListingType,
+} from "@/lib/mock-marketplace"
 
 export default function ListingDetailPage() {
   const { id } = useParams()
@@ -19,6 +34,7 @@ export default function ListingDetailPage() {
   const [isLoadingListing, setIsLoadingListing] = React.useState(true)
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [deleteError, setDeleteError] = React.useState<string | null>(null)
+  const [selectedImageIndex, setSelectedImageIndex] = React.useState(0)
 
   React.useEffect(() => {
     let ignore = false
@@ -44,6 +60,7 @@ export default function ListingDetailPage() {
 
         if (!ignore) {
           setListing(nextListing)
+          setSelectedImageIndex(0)
         }
       } catch {
         if (!ignore) {
@@ -102,8 +119,8 @@ export default function ListingDetailPage() {
 
   if (isPending) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-[#f7f5ef]">
-        <div className="rounded-full border bg-background/80 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur">
+      <div className="flex min-h-svh items-center justify-center bg-background">
+        <div className="rounded-full border bg-background px-4 py-2 text-sm text-muted-foreground shadow-sm">
           Cargando publicacion...
         </div>
       </div>
@@ -115,7 +132,7 @@ export default function ListingDetailPage() {
   }
 
   return (
-    <div className="min-h-svh bg-[#f7f5ef] text-foreground">
+    <div className="min-h-svh bg-background text-foreground">
       <MarketplaceNavbar user={data.user} />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
@@ -127,60 +144,112 @@ export default function ListingDetailPage() {
         </Button>
 
         {isLoadingListing ? (
-          <Card className="rounded-[2rem] bg-background/90 p-8 text-center text-muted-foreground">
-            Buscando el anuncio...
-          </Card>
+          <ListingDetailSkeleton />
         ) : listing ? (
           <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <Card className="overflow-hidden rounded-[2rem] bg-background py-0 shadow-sm shadow-foreground/5">
-              {listing.images[0]?.url ? (
-                <img
-                  src={listing.images[0].url}
-                  alt={listing.title}
-                  className="aspect-video w-full object-cover"
-                />
-              ) : (
-                <div className="flex aspect-video items-center justify-center bg-muted text-muted-foreground">
-                  <ImageIcon className="size-10" />
-                </div>
-              )}
-              <CardContent className="space-y-5 p-6 sm:p-8">
-                <div className="flex flex-wrap gap-2">
-                  {listing.categories.map((category) => (
-                    <span key={category.id} className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                      {category.name}
-                    </span>
-                  ))}
-                </div>
-                <div className="space-y-3">
-                  <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-                    {listing.title}
-                  </h1>
-                  <p className="whitespace-pre-wrap text-base leading-7 text-muted-foreground">
-                    {listing.description}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <aside className="lg:sticky lg:top-6 lg:h-fit">
-              <Card className="rounded-[2rem] bg-foreground text-background shadow-xl shadow-foreground/10">
-                <CardContent className="space-y-5 p-6">
-                  <p className="text-sm text-background/70">Precio</p>
-                  <p className="text-3xl font-semibold">{formatListingPrice(listing)}</p>
-                  <div className="grid gap-3 text-sm text-background/75">
-                    <div className="flex items-center gap-2 rounded-2xl bg-background/10 p-3">
-                      <Tag className="size-4" />
-                      {listing.listingType}
+            <div className="space-y-5">
+              <Card className="overflow-hidden rounded-[2rem] bg-background py-0 shadow-sm shadow-foreground/5">
+                <div className="relative bg-muted">
+                  {listing.images[selectedImageIndex]?.url ? (
+                    <img
+                      src={listing.images[selectedImageIndex].url}
+                      alt={listing.images[selectedImageIndex].name ?? listing.title}
+                      className="aspect-[4/3] w-full object-cover sm:aspect-video"
+                    />
+                  ) : (
+                    <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 bg-muted text-muted-foreground sm:aspect-video">
+                      <ImageIcon className="size-12" />
+                      <span className="text-sm">Esta publicacion no tiene fotos</span>
                     </div>
-                    <div className="flex items-center gap-2 rounded-2xl bg-background/10 p-3">
+                  )}
+
+                  {listing.images.length > 1 ? (
+                    <span className="absolute right-4 top-4 rounded-full border bg-background px-3 py-1 text-xs font-medium text-foreground shadow-sm">
+                      {selectedImageIndex + 1}/{listing.images.length}
+                    </span>
+                  ) : null}
+                </div>
+
+                {listing.images.length > 1 ? (
+                  <div className="flex gap-3 overflow-x-auto border-t bg-background p-3">
+                    {listing.images.map((image, index) => (
+                      <button
+                        key={image.id}
+                        type="button"
+                        className={`shrink-0 overflow-hidden rounded-2xl border-2 transition ${
+                          selectedImageIndex === index
+                            ? "border-primary"
+                            : "border-transparent opacity-70 hover:opacity-100"
+                        }`}
+                        onClick={() => setSelectedImageIndex(index)}
+                      >
+                        <img
+                          src={image.url}
+                          alt={image.name ?? `${listing.title} miniatura ${index + 1}`}
+                          className="size-20 object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </Card>
+
+              <Card className="rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
+                <CardContent className="space-y-6 p-6 sm:p-8">
+                  <div className="flex flex-wrap gap-2">
+                    {listing.categories.map((category) => (
+                      <span
+                        key={category.id}
+                        className="rounded-full border bg-background px-3 py-1 text-xs font-medium text-foreground"
+                      >
+                        {category.name}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-muted-foreground">Detalle de la publicacion</p>
+                    <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+                      {listing.title}
+                    </h1>
+                    <p className="whitespace-pre-wrap text-base leading-8 text-muted-foreground">
+                      {listing.description || "El vendedor no agrego una descripcion."}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <aside className="space-y-4 lg:sticky lg:top-6 lg:h-fit">
+              <Card className="rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
+                <CardContent className="space-y-5 p-6">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Precio</p>
+                    <p className="mt-1 text-3xl font-semibold">{formatListingPrice(listing)}</p>
+                  </div>
+
+                  <div className="grid gap-3 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 rounded-2xl border bg-background p-3">
+                      <Tag className="size-4" />
+                      {formatListingType(listing.listingType)}
+                    </div>
+                    <div className="flex items-center gap-2 rounded-2xl border bg-background p-3">
+                      <ShieldCheck className="size-4" />
+                      {listing.condition ? formatCondition(listing.condition) : "Estado por acordar"}
+                    </div>
+                    <div className="flex items-center gap-2 rounded-2xl border bg-background p-3">
                       <MapPin className="size-4" />
                       {listing.location ?? "Ubicacion por acordar"}
+                    </div>
+                    <div className="flex items-center gap-2 rounded-2xl border bg-background p-3">
+                      <Eye className="size-4" />
+                      {listing.viewCount} vistas
                     </div>
                   </div>
 
                   {deleteError && (
-                    <p className="rounded-xl bg-destructive/20 px-3 py-2 text-sm text-destructive-foreground">
+                    <p className="rounded-xl border px-3 py-2 text-sm text-muted-foreground">
                       {deleteError}
                     </p>
                   )}
@@ -197,10 +266,29 @@ export default function ListingDetailPage() {
                   </Button>
                 </CardContent>
               </Card>
+
+              <Card className="rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
+                <CardContent className="space-y-4 p-5">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Contacto</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Coordina directamente con el vendedor.
+                    </p>
+                  </div>
+                  <ContactLinks contactInfo={listing.contactInfo} />
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-[2rem] border-dashed bg-background shadow-sm shadow-foreground/5">
+                <CardContent className="space-y-2 p-5 text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground">Compra segura en campus</p>
+                  <p>Revisa el articulo antes de pagar y acuerda entregas en zonas concurridas.</p>
+                </CardContent>
+              </Card>
             </aside>
           </section>
         ) : (
-          <Card className="rounded-[2rem] bg-background/90 p-8 text-center">
+          <Card className="rounded-[2rem] bg-background p-8 text-center">
             <p className="font-heading text-xl font-semibold">No encontramos esta publicacion</p>
             <p className="mt-2 text-sm text-muted-foreground">
               Puede que haya sido removida o que el enlace no sea correcto.
@@ -226,4 +314,138 @@ function formatListingPrice(listing: ListingDetailResponse) {
     currency: "COP",
     maximumFractionDigits: 0,
   }).format(Number(listing.price))
+}
+
+function ListingDetailSkeleton() {
+  return (
+    <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="space-y-5">
+        <Card className="overflow-hidden rounded-[2rem] bg-background py-0 shadow-sm shadow-foreground/5">
+          <div className="aspect-[4/3] animate-pulse bg-muted sm:aspect-video" />
+          <div className="flex gap-3 border-t bg-background p-3">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="size-20 animate-pulse rounded-2xl bg-muted"
+              />
+            ))}
+          </div>
+        </Card>
+
+        <Card className="rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
+          <CardContent className="space-y-6 p-6 sm:p-8">
+            <div className="flex gap-2">
+              <div className="h-6 w-20 animate-pulse rounded-full bg-muted" />
+              <div className="h-6 w-24 animate-pulse rounded-full bg-muted" />
+            </div>
+            <div className="space-y-3">
+              <div className="h-4 w-36 animate-pulse rounded-full bg-muted" />
+              <div className="h-10 w-3/4 animate-pulse rounded-2xl bg-muted" />
+              <div className="h-4 w-full animate-pulse rounded-full bg-muted" />
+              <div className="h-4 w-11/12 animate-pulse rounded-full bg-muted" />
+              <div className="h-4 w-2/3 animate-pulse rounded-full bg-muted" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <aside className="space-y-4 lg:sticky lg:top-6 lg:h-fit">
+        <Card className="rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
+          <CardContent className="space-y-5 p-6">
+            <div className="space-y-2">
+              <div className="h-4 w-16 animate-pulse rounded-full bg-muted" />
+              <div className="h-9 w-40 animate-pulse rounded-2xl bg-muted" />
+            </div>
+            <div className="grid gap-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-11 animate-pulse rounded-2xl bg-muted"
+                />
+              ))}
+            </div>
+            <div className="h-10 animate-pulse rounded-full bg-muted" />
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
+          <CardContent className="space-y-3 p-5">
+            <div className="h-4 w-20 animate-pulse rounded-full bg-muted" />
+            <div className="h-4 w-48 animate-pulse rounded-full bg-muted" />
+            <div className="h-10 animate-pulse rounded-2xl bg-muted" />
+          </CardContent>
+        </Card>
+      </aside>
+    </section>
+  )
+}
+
+function ContactLinks({ contactInfo }: { contactInfo: Record<string, string> | null }) {
+  const whatsapp = contactInfo?.whatsapp
+  const instagram = contactInfo?.instagram
+  const email = contactInfo?.email
+
+  if (!whatsapp && !instagram && !email) {
+    return (
+      <p className="rounded-2xl bg-muted px-3 py-2 text-sm text-muted-foreground">
+        Esta publicacion no tiene contacto visible.
+      </p>
+    )
+  }
+
+  return (
+    <div className="grid gap-2 text-sm">
+      {whatsapp ? (
+        <a
+          href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-2 rounded-2xl border bg-background px-3 py-2 transition hover:bg-muted"
+        >
+          <Phone className="size-4" />
+          WhatsApp
+        </a>
+      ) : null}
+      {instagram ? (
+        <a
+          href={`https://instagram.com/${instagram.replace(/^@/, "")}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-2 rounded-2xl border bg-background px-3 py-2 transition hover:bg-muted"
+        >
+          <MessageCircle className="size-4" />
+          {instagram.startsWith("@") ? instagram : `@${instagram}`}
+        </a>
+      ) : null}
+      {email ? (
+        <a
+          href={`mailto:${email}`}
+          className="flex items-center gap-2 rounded-2xl border bg-background px-3 py-2 transition hover:bg-muted"
+        >
+          <Mail className="size-4" />
+          {email}
+        </a>
+      ) : null}
+    </div>
+  )
+}
+
+function formatListingType(type: ListingType) {
+  const labels: Record<ListingType, string> = {
+    SALE: "Venta",
+    EXCHANGE: "Intercambio",
+    SERVICE: "Servicio",
+  }
+
+  return labels[type]
+}
+
+function formatCondition(condition: ListingCondition) {
+  const labels: Record<ListingCondition, string> = {
+    NEW: "Nuevo",
+    LIKE_NEW: "Como nuevo",
+    USED: "Usado",
+  }
+
+  return labels[condition]
 }

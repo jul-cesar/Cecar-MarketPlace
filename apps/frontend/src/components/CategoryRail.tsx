@@ -35,27 +35,29 @@ export function CategoryRail({
   onSelectCategory,
 }: CategoryRailProps) {
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <CategoryButton
-        label="Todo"
-        count={categories.reduce(
-          (total, category) => total + (listingCountByCategory[category.slug] ?? 0),
-          0
-        )}
-        isActive={selectedCategory === "all"}
-        onClick={() => onSelectCategory("all")}
-        Icon={LayoutGrid}
-      />
-      {categories.map((category) => (
+    <div className="relative">
+      <div className="flex gap-3 overflow-x-auto pb-3 pr-6 [scrollbar-color:hsl(var(--muted-foreground))_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground [&::-webkit-scrollbar-track]:bg-transparent">
         <CategoryButton
-          key={category.id}
-          label={category.name}
-          count={listingCountByCategory[category.slug] ?? 0}
-          isActive={selectedCategory === category.slug}
-          onClick={() => onSelectCategory(category.slug)}
-          Icon={category.icon ? iconByName[category.icon] ?? LayoutGrid : LayoutGrid}
+          label="Todo"
+          count={categories.reduce(
+            (total, category) => total + (listingCountByCategory[category.slug] ?? 0),
+            0
+          )}
+          isActive={selectedCategory === "all"}
+          onClick={() => onSelectCategory("all")}
+          Icon={LayoutGrid}
         />
-      ))}
+        {categories.map((category) => (
+          <CategoryButton
+            key={category.id}
+            label={category.name}
+            count={listingCountByCategory[category.slug] ?? 0}
+            isActive={selectedCategory === category.slug}
+            onClick={() => onSelectCategory(category.slug)}
+            Icon={category.icon ? iconByName[category.icon] ?? LayoutGrid : LayoutGrid}
+          />
+        ))}
+      </div>
     </div>
   )
 }
