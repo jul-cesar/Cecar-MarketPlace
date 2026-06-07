@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Link } from 'react-router'
 import {
-  Eye,
   ImageIcon,
   MapPin,
   MessageCircle,
@@ -189,14 +188,6 @@ export function ListingCard({ listing, author }: ListingCardProps) {
                 {conditionLabel[listing.condition]}
               </span>
             ) : null}
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
-              {listing.listingType === 'EXCHANGE' ? (
-                <RefreshCw className="size-3" />
-              ) : (
-                <Eye className="size-3" />
-              )}
-              {listing.viewCount} vistas
-            </span>
             <Link
               to={`/listings/${listing.id}`}
               className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-medium text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"

@@ -2,7 +2,6 @@ import * as React from "react"
 import { Link, Navigate, useNavigate, useParams } from "react-router"
 import {
   ArrowLeft,
-  Eye,
   ImageIcon,
   Loader2,
   Mail,
@@ -299,10 +298,6 @@ export default function ListingDetailPage() {
                     <div className="flex items-center gap-2 rounded-2xl border bg-background p-3">
                       <MapPin className="size-4" />
                       {listing.location ?? "Ubicacion por acordar"}
-                    </div>
-                    <div className="flex items-center gap-2 rounded-2xl border bg-background p-3">
-                      <Eye className="size-4" />
-                      {listing.viewCount} vistas
                     </div>
                   </div>
 

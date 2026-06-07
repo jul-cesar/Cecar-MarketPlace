@@ -386,10 +386,10 @@ export default function MessagesPage() {
   )
 
   return (
-    <div className="min-h-svh bg-background text-foreground">
+    <div className="h-svh flex flex-col overflow-hidden bg-background text-foreground">
       <MarketplaceNavbar user={data.user} />
 
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 overflow-hidden px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm font-medium text-primary">Mensajes</p>
@@ -404,9 +404,9 @@ export default function MessagesPage() {
           </Button>
         </div>
 
-        <section className="grid min-h-[70vh] gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
-          <Card className="rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
-            <CardContent className="space-y-3 p-4">
+        <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
+          <Card className="flex flex-col h-full overflow-hidden rounded-[2rem] bg-background shadow-sm shadow-foreground/5 lg:w-[340px] lg:shrink-0">
+            <CardContent className="flex-1 space-y-3 overflow-y-auto p-4">
               {isLoading ? (
                 <div className="flex items-center gap-2 rounded-2xl border p-4 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
@@ -456,8 +456,8 @@ export default function MessagesPage() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
-            <CardContent className="flex min-h-[70vh] flex-col p-0">
+          <Card className="flex flex-col h-full min-w-0 flex-1 overflow-hidden rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
+            <CardContent className="flex h-full flex-col p-0">
               {activeConversation ? (
                 <>
                   <div className="border-b p-5">
