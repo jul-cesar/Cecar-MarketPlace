@@ -4,7 +4,6 @@ import {
   ImageIcon,
   MapPin,
   MessageCircle,
-  RefreshCw,
   Tag,
 } from 'lucide-react'
 
