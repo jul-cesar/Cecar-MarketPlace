@@ -7,12 +7,17 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_GATEWAY_BASE_URL: ${VITE_GATEWAY_BASE_URL:-https://cecarhub.com/api/v1}
+        VITE_MESSAGING_BASE_URL: ${VITE_MESSAGING_BASE_URL:-https://cecarhub.com}
+        VITE_MESSAGING_API_PREFIX: ${VITE_MESSAGING_API_PREFIX:-/api/v1/messaging}
+        VITE_MESSAGING_SOCKET_URL: ${VITE_MESSAGING_SOCKET_URL:-https://cecarhub.com}
+        VITE_MESSAGING_SOCKET_PATH: ${VITE_MESSAGING_SOCKET_PATH:-/socket.io}
     ports:
       - "127.0.0.1:8088:80"
     environment:
       - VITE_GATEWAY_BASE_URL=${VITE_GATEWAY_BASE_URL:-https://cecarhub.com/api/v1}
     depends_on:
       - gateway
+      - messaging
     networks:
       - marketplace
     restart: unless-stopped
@@ -45,11 +50,13 @@ services:
       - identity-service.url=http://identity:3000
       - catalog-service.url=http://catalog:8081
       - media-service.url=http://media:3001
+      - messaging-service.url=http://messaging:3002
       - frontend.url=${FRONTEND_URL:-https://cecarhub.com}
     depends_on:
       - identity
       - catalog
       - media
+      - messaging
     networks:
       - marketplace
     restart: unless-stopped
@@ -76,6 +83,27 @@ services:
       - "3001"
     environment:
       - UPLOADTHING_TOKEN=${UPLOADTHING_TOKEN}
+    networks:
+      - marketplace
+    restart: unless-stopped
+
+  messaging:
+    build:
+      context: ./apps/messaging-service
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3002:3002"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3002
+      - DATABASE_URL=${MESSAGING_DATABASE_URL}
+      - IDENTITY_SERVICE_URL=http://identity:3000
+      - CATALOG_SERVICE_URL=http://catalog:8081
+      - FRONTEND_URL=${FRONTEND_URL:-https://cecarhub.com}
+      - ENABLE_SERVICE_CORS=false
+    depends_on:
+      - identity
+      - catalog
     networks:
       - marketplace
     restart: unless-stopped
