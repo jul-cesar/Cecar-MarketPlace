@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Navigate, useSearchParams } from 'react-router'
+import { Link, Navigate, useSearchParams } from 'react-router'
 import { Loader2, MessageCircle, SendHorizonal } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -390,11 +390,18 @@ export default function MessagesPage() {
       <MarketplaceNavbar user={data.user} />
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div>
-          <p className="text-sm font-medium text-primary">Mensajes</p>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            Conversaciones del marketplace
-          </h1>
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-sm font-medium text-primary">Mensajes</p>
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              Conversaciones del marketplace
+            </h1>
+          </div>
+          <Button asChild variant="outline" className="w-fit rounded-full">
+            <Link to="/">
+              Volver al mercado
+            </Link>
+          </Button>
         </div>
 
         <section className="grid min-h-[70vh] gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">

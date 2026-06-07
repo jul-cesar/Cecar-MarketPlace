@@ -321,20 +321,6 @@ export default function HomePage() {
             </div>
 
             <div className="rounded-[2rem] border bg-background/80 p-5 shadow-sm shadow-foreground/5">
-              <p className="text-sm font-medium text-primary">Resumen</p>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-muted p-3">
-                  <p className="text-2xl font-semibold">{listings.length}</p>
-                  <p className="text-xs text-muted-foreground">Activas</p>
-                </div>
-                <div className="rounded-2xl bg-muted p-3">
-                  <p className="text-2xl font-semibold">{filteredListings.length}</p>
-                  <p className="text-xs text-muted-foreground">Filtradas</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-[2rem] border bg-background/80 p-5 shadow-sm shadow-foreground/5">
               <p className="text-sm font-medium text-primary">Tips para publicar</p>
               <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <p className="rounded-2xl bg-muted px-3 py-2">
