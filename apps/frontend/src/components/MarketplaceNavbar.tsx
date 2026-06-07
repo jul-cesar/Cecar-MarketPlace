@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router"
-import { LogOut, MessageCircle, Plus, Sparkles, UserRound } from "lucide-react"
+import { LogOut, MessageCircle, Plus, UserRound } from "lucide-react"
 import { authClient } from "@/lib/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
