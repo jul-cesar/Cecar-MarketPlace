@@ -15,6 +15,7 @@ import {
   type ListingSummaryResponse,
   type ListingType,
 } from "@/lib/mock-marketplace";
+import { fetchBasicUsers, type BasicUser } from "@/lib/users";
 import { cn } from "@/lib/utils";
 import { Spotlight } from "@/components/ui/spotlight";
 
@@ -42,6 +43,9 @@ export default function HomePage() {
     React.useState<ListingTypeFilter>("all");
   const [categories, setCategories] = React.useState<CategoryResponse[]>([]);
   const [listings, setListings] = React.useState<ListingSummaryResponse[]>([]);
+  const [authorsById, setAuthorsById] = React.useState<Map<string, BasicUser>>(
+    () => new Map(),
+  );
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -80,6 +84,32 @@ export default function HomePage() {
       ignore = true;
     };
   }, []);
+
+  React.useEffect(() => {
+    let ignore = false;
+
+    async function loadAuthors() {
+      try {
+        const authors = await fetchBasicUsers(
+          listings.map((listing) => listing.sellerId),
+        );
+
+        if (!ignore) {
+          setAuthorsById(authors);
+        }
+      } catch {
+        if (!ignore) {
+          setAuthorsById(new Map());
+        }
+      }
+    }
+
+    loadAuthors();
+
+    return () => {
+      ignore = true;
+    };
+  }, [listings]);
 
   const deferredQuery = React.useDeferredValue(query);
 
@@ -252,7 +282,11 @@ export default function HomePage() {
               ) : filteredListings.length > 0 ? (
                 <div className="grid w-full gap-5">
                   {filteredListings.map((listing) => (
-                    <ListingCard key={listing.id} listing={listing} />
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      author={authorsById.get(listing.sellerId)}
+                    />
                   ))}
                 </div>
               ) : (

@@ -21,6 +21,7 @@ import { apiRoutes } from "@/lib/api"
 import { useSession } from "@/lib/auth"
 import { createConversation } from "@/lib/messaging"
 import { deleteImageFiles } from "@/lib/uploadthing"
+import { fetchBasicUsers, type BasicUser } from "@/lib/users"
 import type {
   ListingCondition,
   ListingDetailResponse,
@@ -32,6 +33,7 @@ export default function ListingDetailPage() {
   const navigate = useNavigate()
   const { data, isPending } = useSession()
   const [listing, setListing] = React.useState<ListingDetailResponse | null>(null)
+  const [author, setAuthor] = React.useState<BasicUser | null>(null)
   const [isLoadingListing, setIsLoadingListing] = React.useState(true)
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [isContacting, setIsContacting] = React.useState(false)
@@ -59,14 +61,17 @@ export default function ListingDetailPage() {
         }
 
         const nextListing = (await response.json()) as ListingDetailResponse
+        const authors = await fetchBasicUsers([nextListing.sellerId])
 
         if (!ignore) {
           setListing(nextListing)
+          setAuthor(authors.get(nextListing.sellerId) ?? null)
           setSelectedImageIndex(0)
         }
       } catch {
         if (!ignore) {
           setListing(null)
+          setAuthor(null)
         }
       } finally {
         if (!ignore) {
@@ -84,6 +89,11 @@ export default function ListingDetailPage() {
 
   async function handleDelete() {
     if (!listing || !id) return
+
+    if (listing.sellerId !== data?.user.id) {
+      toast.error("Solo el autor puede eliminar esta publicacion")
+      return
+    }
 
     setIsDeleting(true)
     setDeleteError(null)
@@ -157,6 +167,8 @@ export default function ListingDetailPage() {
   if (!data?.user) {
     return <Navigate to="/login" replace />
   }
+
+  const isOwner = listing?.sellerId === data.user.id
 
   return (
     <div className="min-h-svh bg-background text-foreground">
@@ -240,6 +252,25 @@ export default function ListingDetailPage() {
                     <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
                       {listing.title}
                     </h1>
+                    <div className="flex items-center gap-3 rounded-2xl border bg-background p-3">
+                      {author?.image ? (
+                        <img
+                          src={author.image}
+                          alt={getAuthorName(author)}
+                          className="size-10 rounded-full border object-cover"
+                        />
+                      ) : (
+                        <div className="flex size-10 items-center justify-center rounded-full border bg-background text-sm font-semibold">
+                          {getAuthorInitial(author, listing.sellerId)}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Publicado por</p>
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {getAuthorName(author)}
+                        </p>
+                      </div>
+                    </div>
                     <p className="whitespace-pre-wrap text-base leading-8 text-muted-foreground">
                       {listing.description || "El vendedor no agrego una descripcion."}
                     </p>
@@ -275,22 +306,24 @@ export default function ListingDetailPage() {
                     </div>
                   </div>
 
-                  {deleteError && (
+                  {isOwner && deleteError && (
                     <p className="rounded-xl border px-3 py-2 text-sm text-muted-foreground">
                       {deleteError}
                     </p>
                   )}
 
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="w-full rounded-full"
-                    disabled={isDeleting}
-                    onClick={handleDelete}
-                  >
-                    {isDeleting && <Loader2 className="size-4 animate-spin" />}
-                    {isDeleting ? "Eliminando..." : "Eliminar publicacion"}
-                  </Button>
+                  {isOwner ? (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      className="w-full rounded-full"
+                      disabled={isDeleting}
+                      onClick={handleDelete}
+                    >
+                      {isDeleting && <Loader2 className="size-4 animate-spin" />}
+                      {isDeleting ? "Eliminando..." : "Eliminar publicacion"}
+                    </Button>
+                  ) : null}
                 </CardContent>
               </Card>
 
@@ -305,7 +338,7 @@ export default function ListingDetailPage() {
                   <Button
                     type="button"
                     className="w-full rounded-full"
-                    disabled={isContacting || listing.sellerId === data.user.id}
+                    disabled={isContacting || isOwner}
                     onClick={handleContactSeller}
                   >
                     {isContacting ? (
@@ -313,7 +346,7 @@ export default function ListingDetailPage() {
                     ) : (
                       <MessageCircle className="size-4" />
                     )}
-                    {listing.sellerId === data.user.id
+                    {isOwner
                       ? "Es tu publicacion"
                       : isContacting
                         ? "Abriendo chat..."
@@ -472,6 +505,14 @@ function ContactLinks({ contactInfo }: { contactInfo: Record<string, string> | n
       ) : null}
     </div>
   )
+}
+
+function getAuthorName(author?: BasicUser | null) {
+  return author?.name?.trim() || author?.email || "Usuario CECAR"
+}
+
+function getAuthorInitial(author: BasicUser | null, fallbackId: string) {
+  return getAuthorName(author).trim().charAt(0).toUpperCase() || fallbackId.charAt(0).toUpperCase() || "U"
 }
 
 function formatListingType(type: ListingType) {

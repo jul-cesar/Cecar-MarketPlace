@@ -15,6 +15,7 @@ import type {
   ListingSummaryResponse,
   ListingType,
 } from '@/lib/mock-marketplace'
+import type { BasicUser } from '@/lib/users'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Carousel,
@@ -40,9 +41,10 @@ const conditionLabel: Record<ListingCondition, string> = {
 
 interface ListingCardProps {
   listing: ListingSummaryResponse
+  author?: BasicUser
 }
 
-export function ListingCard({ listing }: ListingCardProps) {
+export function ListingCard({ listing, author }: ListingCardProps) {
   const [carouselApi, setCarouselApi] = React.useState<CarouselApi>()
   const [currentSlide, setCurrentSlide] = React.useState(0)
   const images = getListingImages(listing)
@@ -71,17 +73,27 @@ export function ListingCard({ listing }: ListingCardProps) {
     <Card className="overflow-hidden rounded-[2rem] border bg-background/95 py-0 shadow-sm shadow-foreground/5 transition-shadow duration-300 hover:shadow-xl hover:shadow-foreground/10">
       <CardContent className="space-y-4 p-0">
         <div className="flex items-center gap-3 px-4 pt-4">
-          <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            {getSellerInitial(listing.title)}
-          </div>
+          {author?.image ? (
+            <img
+              src={author.image}
+              alt={getAuthorName(author)}
+              className="size-10 rounded-full border object-cover"
+            />
+          ) : (
+            <div className="flex size-10 items-center justify-center rounded-full border bg-background text-sm font-semibold text-foreground">
+              {getAuthorInitial(author, listing.sellerId)}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <Link
               to={`/listings/${listing.id}`}
               className="line-clamp-1 font-heading text-base font-semibold leading-tight hover:text-primary"
             >
-              {listing.title}
+              {getAuthorName(author)}
             </Link>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span className="line-clamp-1">{listing.title}</span>
+              <span aria-hidden="true">•</span>
               <span>{primaryCategory?.name ?? 'General'}</span>
               {listing.location ? (
                 <>
@@ -218,8 +230,12 @@ function getListingImages(listing: ListingSummaryResponse): ListingImageResponse
   ]
 }
 
-function getSellerInitial(title: string) {
-  return title.trim().charAt(0).toUpperCase() || 'C'
+function getAuthorName(author?: BasicUser) {
+  return author?.name?.trim() || author?.email || 'Usuario CECAR'
+}
+
+function getAuthorInitial(author: BasicUser | undefined, fallbackId: string) {
+  return getAuthorName(author).trim().charAt(0).toUpperCase() || fallbackId.charAt(0).toUpperCase() || 'U'
 }
 
 function formatListingPrice(listing: ListingSummaryResponse) {

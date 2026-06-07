@@ -21,6 +21,9 @@ export function gatewayUrl(path: string) {
 export const apiRoutes = {
   auth: gatewayUrl('/api/v1/identity/auth'),
   gatewayBaseUrl,
+  identity: {
+    basicUsers: gatewayUrl('/api/v1/identity/internal/v1/users/basic'),
+  },
   catalog: {
     categories: gatewayUrl('/api/v1/catalog/categories'),
     listings: gatewayUrl('/api/v1/catalog/listings'),
