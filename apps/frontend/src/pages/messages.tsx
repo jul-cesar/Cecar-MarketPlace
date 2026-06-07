@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router'
-import { Loader2, MessageCircle, SendHorizonal } from 'lucide-react'
+import { ArrowLeft, Loader2, MessageCircle, SendHorizonal } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { MarketplaceNavbar } from '@/components/MarketplaceNavbar'
@@ -355,6 +355,11 @@ export default function MessagesPage() {
     setSearchParams({ conversationId })
   }
 
+  function clearActiveConversation() {
+    setActiveConversationId('')
+    setSearchParams({})
+  }
+
   if (isPending) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-background">
@@ -405,7 +410,7 @@ export default function MessagesPage() {
         </div>
 
         <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
-          <Card className="flex flex-col h-full overflow-hidden rounded-[2rem] bg-background shadow-sm shadow-foreground/5 lg:w-[340px] lg:shrink-0">
+          <Card className={cn('flex flex-col h-full overflow-hidden rounded-[2rem] bg-background shadow-sm shadow-foreground/5 lg:w-[340px] lg:shrink-0', activeConversationId && 'hidden lg:flex')}>
             <CardContent className="flex-1 space-y-3 overflow-y-auto p-4">
               {isLoading ? (
                 <div className="flex items-center gap-2 rounded-2xl border p-4 text-sm text-muted-foreground">
@@ -456,13 +461,16 @@ export default function MessagesPage() {
             </CardContent>
           </Card>
 
-          <Card className="flex flex-col h-full min-w-0 flex-1 overflow-hidden rounded-[2rem] bg-background shadow-sm shadow-foreground/5">
+          <Card className={cn('flex flex-col h-full min-w-0 flex-1 overflow-hidden rounded-[2rem] bg-background shadow-sm shadow-foreground/5', !activeConversationId && 'hidden lg:flex')}>
             <CardContent className="flex h-full flex-col p-0">
               {activeConversation ? (
                 <>
                   <div className="border-b p-5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3">
+                        <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" onClick={clearActiveConversation}>
+                          <ArrowLeft className="size-5" />
+                        </Button>
                       <UserAvatar user={activeConversation.peer} fallbackId={getPeerId(activeConversation, data.user.id)} />
                       <div className="min-w-0">
                         <p className="truncate font-medium">
