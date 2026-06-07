@@ -227,47 +227,48 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="grid items-start gap-6 lg:grid-cols-[minmax(0,42rem)_320px]">
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                {isLoading ? "Cargando..." : filteredListings.length} resultados
-                encontrados
-              </p>
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">
-                Publicaciones destacadas
-              </h2>
-            </div>
-
-            {isLoading ? (
-              <div className="grid w-full gap-5">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-[34rem] animate-pulse rounded-[2rem] border bg-muted/70"
-                  />
-                ))}
-              </div>
-            ) : filteredListings.length > 0 ? (
-              <div className="grid w-full gap-5">
-                {filteredListings.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-[2rem] border border-dashed bg-background/70 p-10 text-center">
-                <p className="font-heading text-xl font-semibold">
-                  Nada por aqui todavia
-                </p>
-                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                  Prueba con otra categoria, cambia el tipo de publicacion o borra
-                  parte de la busqueda.
-                </p>
-              </div>
-            )}
+        <section className="space-y-4">
+          <div>
+            <p className="text-sm text-muted-foreground">
+              {isLoading ? "Cargando..." : filteredListings.length} resultados
+              encontrados
+            </p>
+            <h2 className="font-heading text-2xl font-semibold tracking-tight">
+              Publicaciones destacadas
+            </h2>
           </div>
 
-          <aside className="space-y-4 lg:sticky lg:top-6">
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,42rem)_320px]">
+            <div>
+              {isLoading ? (
+                <div className="grid w-full gap-5">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-[34rem] animate-pulse rounded-[2rem] border bg-muted/70"
+                    />
+                  ))}
+                </div>
+              ) : filteredListings.length > 0 ? (
+                <div className="grid w-full gap-5">
+                  {filteredListings.map((listing) => (
+                    <ListingCard key={listing.id} listing={listing} />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-[2rem] border border-dashed bg-background/70 p-10 text-center">
+                  <p className="font-heading text-xl font-semibold">
+                    Nada por aqui todavia
+                  </p>
+                  <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                    Prueba con otra categoria, cambia el tipo de publicacion o borra
+                    parte de la busqueda.
+                  </p>
+                </div>
+              )}
+            </div>
+
+          <aside className="hidden space-y-4 lg:sticky lg:top-6 lg:block">
             <div className="rounded-[2rem] border bg-foreground p-5 text-background shadow-xl shadow-foreground/10">
               <p className="text-sm text-background/70">Vende o cambia rapido</p>
               <h3 className="mt-2 font-heading text-2xl font-semibold leading-tight">
@@ -314,6 +315,7 @@ export default function HomePage() {
               </div>
             </div>
           </aside>
+          </div>
         </section>
       </main>
     </div>
