@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { apiRoutes } from "@/lib/api"
 import { useSession } from "@/lib/auth"
+import { createConversation } from "@/lib/messaging"
 import { deleteImageFiles } from "@/lib/uploadthing"
 import type {
   ListingCondition,
@@ -33,6 +34,7 @@ export default function ListingDetailPage() {
   const [listing, setListing] = React.useState<ListingDetailResponse | null>(null)
   const [isLoadingListing, setIsLoadingListing] = React.useState(true)
   const [isDeleting, setIsDeleting] = React.useState(false)
+  const [isContacting, setIsContacting] = React.useState(false)
   const [deleteError, setDeleteError] = React.useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = React.useState(0)
 
@@ -114,6 +116,31 @@ export default function ListingDetailPage() {
       setDeleteError("No pudimos eliminar la publicacion. Intenta de nuevo.")
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  async function handleContactSeller() {
+    if (!listing) return
+
+    if (listing.sellerId === data?.user.id) {
+      toast.info("Esta publicacion es tuya")
+      return
+    }
+
+    setIsContacting(true)
+
+    try {
+      const conversation = await createConversation(listing.id)
+
+      navigate(`/messages?conversationId=${conversation.id}`)
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No pudimos iniciar la conversacion",
+      )
+    } finally {
+      setIsContacting(false)
     }
   }
 
@@ -275,6 +302,23 @@ export default function ListingDetailPage() {
                       Coordina directamente con el vendedor.
                     </p>
                   </div>
+                  <Button
+                    type="button"
+                    className="w-full rounded-full"
+                    disabled={isContacting || listing.sellerId === data.user.id}
+                    onClick={handleContactSeller}
+                  >
+                    {isContacting ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <MessageCircle className="size-4" />
+                    )}
+                    {listing.sellerId === data.user.id
+                      ? "Es tu publicacion"
+                      : isContacting
+                        ? "Abriendo chat..."
+                        : "Contactar vendedor"}
+                  </Button>
                   <ContactLinks contactInfo={listing.contactInfo} />
                 </CardContent>
               </Card>

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router"
-import { LogOut, Plus, Sparkles, UserRound } from "lucide-react"
+import { LogOut, MessageCircle, Plus, Sparkles, UserRound } from "lucide-react"
 import { authClient } from "@/lib/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -63,6 +63,13 @@ export function MarketplaceNavbar({ user }: MarketplaceNavbarProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button asChild variant="outline" className="h-10 rounded-full px-3 sm:px-4">
+            <Link to="/messages">
+              <MessageCircle className="size-4" />
+              <span className="hidden sm:inline">Mensajes</span>
+            </Link>
+          </Button>
+
           <Button asChild className="h-10 rounded-full px-3 sm:px-4">
             <Link to="/publish">
               <Plus className="size-4" />

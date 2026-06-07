@@ -2,7 +2,10 @@ import 'dotenv/config'
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
+import { inArray } from 'drizzle-orm'
 import { auth } from './lib/auth.js';
+import { db } from './db/index.js';
+import { user } from './db/schema.js';
 
 console.log('[identity-service] BETTER_AUTH_URL:', process.env.BETTER_AUTH_URL);
 console.log('[identity-service] GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'MISSING');
@@ -29,6 +32,47 @@ app.get("/internal/v1/validate-session", async (c) => {
     email: session.user.email,
     role: session.user.role ?? "USER" 
   });
+});
+
+app.post("/internal/v1/users/basic", async (c) => {
+  let body: unknown;
+
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "invalid_json" }, 400);
+  }
+
+  const userIds =
+    body &&
+    typeof body === "object" &&
+    !Array.isArray(body) &&
+    Array.isArray((body as { userIds?: unknown }).userIds)
+      ? (body as { userIds: unknown[] }).userIds
+      : null;
+
+  if (!userIds) {
+    return c.json({ error: "userIds array required" }, 400);
+  }
+
+  const ids = [...new Set(userIds.filter((id): id is string => typeof id === "string" && id.trim().length > 0))].slice(0, 100);
+
+  if (ids.length === 0) {
+    return c.json({ data: [] });
+  }
+
+  const users = await db
+    .select({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      role: user.role,
+    })
+    .from(user)
+    .where(inArray(user.id, ids));
+
+  return c.json({ data: users });
 });
 
 app.get('/', (c) => {

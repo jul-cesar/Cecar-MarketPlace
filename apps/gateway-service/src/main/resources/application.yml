@@ -1,5 +1,10 @@
 server:
   port: 8080
+  servlet:
+    session:
+      persistent: false
+  tomcat:
+    basedir: target/tomcat
 
 spring:
   application:
@@ -27,3 +32,9 @@ spring:
                 - Path=/api/v1/media/**
               filters:
                 - RewritePath=/api/v1/media(?<remaining>/?.*), /api/uploadthing$\{remaining}
+            - id: messaging-service
+              uri: ${messaging-service.url:http://127.0.0.1:3002}
+              predicates:
+                - Path=/api/v1/messaging/**
+              filters:
+                - StripPrefix=3

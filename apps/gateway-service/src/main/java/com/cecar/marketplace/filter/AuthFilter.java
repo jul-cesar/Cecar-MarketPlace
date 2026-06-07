@@ -93,6 +93,7 @@ public class AuthFilter extends OncePerRequestFilter {
         return path.startsWith("/api/v1/identity/") ||
                 path.equals("/api/v1/media") ||
                 path.startsWith("/api/v1/media/") ||
+                path.equals("/api/v1/messaging/health") ||
                 path.startsWith("/actuator/");
     }
 
