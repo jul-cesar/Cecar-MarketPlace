@@ -47,7 +47,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
 
   return (
     <div className={cn("flex w-full flex-col gap-6", className)} {...props}>
-      <div className="group relative overflow-hidden rounded-3xl border border-white/60 bg-card/70 shadow-2xl shadow-primary/10 backdrop-blur-xl">
+      <div className="group relative overflow-hidden rounded-3xl border bg-card/70 shadow-2xl shadow-primary/10 backdrop-blur-xl">
         {/* Glow accent en el borde superior */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
 
@@ -108,9 +108,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
           {/* Panel visual */}
           <div className="relative hidden min-h-[28rem] overflow-hidden md:block">
             <img
-              src="https://th.bing.com/th/id/R.b28f870564cea2890e58dbe66bcb3bc9?rik=2%2fue5szaqK%2fB9g&pid=ImgRaw&r=0"
+              src="/logoimg.png"
               alt="Estudiantes en el campus de CECAR"
-              className="absolute inset-0 h-full w-full scale-105 object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-100"
+              className="absolute inset-0 h-full w-full scale-105 object-fill transition-transform duration-[1.4s] ease-out group-hover:scale-100"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/70 via-primary/20 to-transparent mix-blend-multiply" />
             <div className="absolute inset-0 bg-gradient-to-br from-foreground/30 to-transparent" />

@@ -52,7 +52,7 @@ export function MarketplaceNavbar({ user }: MarketplaceNavbarProps) {
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-3 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <div className="flex size-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
-            <Sparkles className="size-4" />
+           <img src="/logoimg.png" alt="Logo de Cecarhub" className="h-5 w-5" />
           </div>
           <div>
             <p className="font-heading text-base font-semibold tracking-tight">
