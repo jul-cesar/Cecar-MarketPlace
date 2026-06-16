@@ -117,9 +117,9 @@ services:
     expose:
       - "8082"
     environment:
-      - SPRING_DATASOURCE_URL=${IDENTITY_DATABASE_URL_JDBC:jdbc:postgresql://localhost:5432/identity}
-      - SPRING_DATASOURCE_USERNAME=${IDENTITY_DATABASE_USERNAME:postgres}
-      - SPRING_DATASOURCE_PASSWORD=${IDENTITY_DATABASE_PASSWORD:postgres}
+      - SPRING_DATASOURCE_URL=${IDENTITY_DATABASE_URL_JDBC:-jdbc:postgresql://localhost:5432/identity}
+      - SPRING_DATASOURCE_USERNAME=${IDENTITY_DATABASE_USERNAME:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${IDENTITY_DATABASE_PASSWORD:-postgres}
       - CATALOG_SERVICE_URL=http://catalog:8081
     depends_on:
       - identity
