@@ -65,13 +65,15 @@ export default function AdminPage() {
     return <Navigate to="/login" replace />
   }
 
-  if (data.user.role !== "admin") {
+  const user = data.user as typeof data.user & { role?: string | null }
+
+  if (user.role !== "admin") {
     return <Navigate to="/" replace />
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <MarketplaceNavbar user={data.user} />
+      <MarketplaceNavbar user={user} />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
