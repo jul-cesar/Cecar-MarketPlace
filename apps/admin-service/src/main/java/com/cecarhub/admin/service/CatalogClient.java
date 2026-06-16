@@ -36,7 +36,7 @@ public class CatalogClient {
                             .queryParam("sort", convertSort(pageable))
                             .build())
                     .retrieve()
-                    .body(new PagedListingResponse());
+                    .body(new ParameterizedTypeReference<PagedListingResponse>() {});
             return toPage(response, pageable);
         } catch (Exception e) {
             log.error("Error fetching listings from catalog: {}", e.getMessage());
@@ -55,7 +55,7 @@ public class CatalogClient {
                             .queryParam("sort", convertSort(pageable))
                             .build())
                     .retrieve()
-                    .body(new PagedListingResponse());
+                    .body(new ParameterizedTypeReference<PagedListingResponse>() {});
             return toPage(response, pageable);
         } catch (Exception e) {
             log.error("Error fetching listings by status from catalog: {}", e.getMessage());
