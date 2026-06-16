@@ -38,3 +38,9 @@ spring:
                 - Path=/api/v1/messaging/**
               filters:
                 - StripPrefix=3
+            - id: admin-service
+              uri: ${admin-service.url:http://localhost:8082}
+              predicates:
+                - Path=/api/v1/admin/**
+              filters:
+                - StripPrefix=3

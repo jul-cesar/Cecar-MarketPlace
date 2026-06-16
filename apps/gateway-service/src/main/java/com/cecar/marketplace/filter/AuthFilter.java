@@ -75,6 +75,12 @@ public class AuthFilter extends OncePerRequestFilter {
             log.info("[Gateway] Authenticated: userId={}, email={}, role={}",
                     sessionInfo.userId, sessionInfo.email, sessionInfo.role);
 
+            if (sessionInfo.email() != null && !sessionInfo.email().endsWith("@cecar.edu.co")) {
+                log.warn("[Gateway] {} {} -> 403 Non-institutional email: {}", method, path, sessionInfo.email());
+                sendForbidden(response, "Solo se permiten correos institucionales (@cecar.edu.co)");
+                return;
+            }
+
             HeaderAddingRequestWrapper wrappedRequest = new HeaderAddingRequestWrapper(request);
             wrappedRequest.addHeader("X-User-Id", sessionInfo.userId);
             wrappedRequest.addHeader("X-User-Email", sessionInfo.email);
@@ -140,6 +146,14 @@ public class AuthFilter extends OncePerRequestFilter {
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         response.getWriter().write("""
                 {"type":"unauthorized","title":"Unauthorized","status":401,"detail":"%s"}
+                """.formatted(message));
+    }
+
+    private void sendForbidden(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        response.getWriter().write("""
+                {"type":"forbidden","title":"Forbidden","status":403,"detail":"%s"}
                 """.formatted(message));
     }
 

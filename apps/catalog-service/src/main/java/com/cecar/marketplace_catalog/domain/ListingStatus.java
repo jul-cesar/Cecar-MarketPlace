@@ -4,5 +4,6 @@ public enum ListingStatus {
     ACTIVE,
     SOLD,
     PAUSED,
-    REMOVED
+    REMOVED,
+    BLOCKED
 }

@@ -8,6 +8,7 @@ export const user = pgTable("user", {
     role: t.varchar("role", { length: 20 }).notNull().default("user"),
   emailVerified: t.boolean("email_verified").notNull(),
   image: t.text("image"),
+  banned: t.boolean("banned").notNull().default(false),
   createdAt: t
     .timestamp("created_at", { precision: 6, withTimezone: true })
     .notNull(),

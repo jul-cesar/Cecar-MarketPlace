@@ -5,6 +5,7 @@ import ListingDetailPage from './pages/listing-detail'
 import LoginPage from './pages/login'
 import HomePage from './pages/home'
 import MessagesPage from './pages/messages'
+import AdminPage from './pages/admin'
 
 function App() {
 
@@ -15,6 +16,7 @@ function App() {
       <Route path="/listings/new" element={<CreateListingPage />} />
       <Route path="/listings/:id" element={<ListingDetailPage />} />
       <Route path="/messages" element={<MessagesPage />} />
+      <Route path="/admin" element={<AdminPage />} />
       <Route path="/login" element={<LoginPage />} />
     </Routes>
   )

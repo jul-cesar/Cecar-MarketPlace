@@ -12,9 +12,31 @@ console.log('[identity-service] GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID
 console.log('[identity-service] GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'MISSING');
 console.log('[identity-service] FRONTEND_URL:', process.env.FRONTEND_URL);
 
+const ALLOWED_EMAIL_DOMAIN = '@cecar.edu.co';
+
 const app = new Hono()
 
 app.use("*", logger());
+
+app.use("/auth/*", async (c, next) => {
+  const path = c.req.path;
+  if (path === '/auth/sign-up/email' || path === '/auth/sign-in/email') {
+    try {
+      const cloned = c.req.raw.clone();
+      const body = await cloned.json();
+      const email: string | undefined = body?.email;
+      if (email && !email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
+        return c.json(
+          { error: 'forbidden', message: 'Solo se permiten correos institucionales (@cecar.edu.co)' },
+          403
+        );
+      }
+    } catch {
+      // body not parseable — let Better Auth handle it
+    }
+  }
+  return next();
+});
 
 app.all("/auth/*", async (c) => auth.handler(c.req.raw));
 

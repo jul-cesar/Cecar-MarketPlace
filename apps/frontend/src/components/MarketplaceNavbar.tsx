@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router"
-import { LogOut, MessageCircle, Plus, UserRound } from "lucide-react"
+import { LogOut, MessageCircle, Plus, Shield, UserRound } from "lucide-react"
 import { authClient } from "@/lib/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -63,6 +63,15 @@ export function MarketplaceNavbar({ user }: MarketplaceNavbarProps) {
         </Link>
 
         <div className="flex items-center gap-2">
+          {user.role === "admin" && (
+            <Button asChild variant="outline" className="h-10 rounded-full px-3 sm:px-4">
+              <Link to="/admin">
+                <Shield className="size-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </Link>
+            </Button>
+          )}
+
           <Button asChild variant="outline" className="h-10 rounded-full px-3 sm:px-4">
             <Link to="/messages">
               <MessageCircle className="size-4" />

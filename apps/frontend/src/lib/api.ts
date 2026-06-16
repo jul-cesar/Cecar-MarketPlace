@@ -42,4 +42,17 @@ export const apiRoutes = {
       messagingUrl(`/conversations/${conversationId}/read`),
     socketPath: import.meta.env.DEV ? '/socket.io' : '/api/v1/messaging/socket.io',
   },
+  admin: {
+    users: gatewayUrl('/api/v1/admin/users'),
+    user: (id: string) => gatewayUrl('/api/v1/admin/users/' + id),
+    banUser: (id: string) => gatewayUrl(`/api/v1/admin/users/${id}/ban`),
+    unbanUser: (id: string) => gatewayUrl(`/api/v1/admin/users/${id}/unban`),
+    metrics: gatewayUrl('/api/v1/admin/metrics'),
+    listings: gatewayUrl('/api/v1/admin/listings'),
+    blockListing: (id: string) => gatewayUrl(`/api/v1/admin/listings/${id}/block`),
+    restoreListing: (id: string) => gatewayUrl(`/api/v1/admin/listings/${id}/restore`),
+    reports: {
+      activity: gatewayUrl('/api/v1/admin/reports/activity'),
+    },
+  },
 }

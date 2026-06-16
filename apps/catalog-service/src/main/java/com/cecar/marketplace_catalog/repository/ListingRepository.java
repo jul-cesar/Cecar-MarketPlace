@@ -15,4 +15,6 @@ public interface ListingRepository extends JpaRepository<Listing, UUID> {
     Page<Listing> findBySellerId(String sellerId, Pageable pageable);
 
     boolean existsByIdAndSellerId(UUID id, String sellerId);
+
+    long countByStatus(ListingStatus status);
 }

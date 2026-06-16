@@ -51,12 +51,14 @@ services:
       - catalog-service.url=http://catalog:8081
       - media-service.url=http://media:3001
       - messaging-service.url=http://messaging:3002
+      - admin-service.url=http://admin:8082
       - frontend.url=${FRONTEND_URL:-https://cecarhub.com}
     depends_on:
       - identity
       - catalog
       - media
       - messaging
+      - admin
     networks:
       - marketplace
     restart: unless-stopped
@@ -101,6 +103,24 @@ services:
       - CATALOG_SERVICE_URL=http://catalog:8081
       - FRONTEND_URL=${FRONTEND_URL:-https://cecarhub.com}
       - ENABLE_SERVICE_CORS=false
+    depends_on:
+      - identity
+      - catalog
+    networks:
+      - marketplace
+    restart: unless-stopped
+
+  admin:
+    build:
+      context: ./apps/admin-service
+      dockerfile: Dockerfile
+    expose:
+      - "8082"
+    environment:
+      - SPRING_DATASOURCE_URL=${IDENTITY_DATABASE_URL_JDBC:jdbc:postgresql://localhost:5432/identity}
+      - SPRING_DATASOURCE_USERNAME=${IDENTITY_DATABASE_USERNAME:postgres}
+      - SPRING_DATASOURCE_PASSWORD=${IDENTITY_DATABASE_PASSWORD:postgres}
+      - CATALOG_SERVICE_URL=http://catalog:8081
     depends_on:
       - identity
       - catalog
