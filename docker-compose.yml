@@ -6,7 +6,7 @@ services:
       context: ./apps/frontend
       dockerfile: Dockerfile
       args:
-        VITE_GATEWAY_BASE_URL: ${VITE_GATEWAY_BASE_URL:-https://cecarhub.com/api/v1}
+        VITE_GATEWAY_BASE_URL: ${VITE_GATEWAY_BASE_URL:-https://cecarhub.com}
         VITE_MESSAGING_BASE_URL: ${VITE_MESSAGING_BASE_URL:-https://cecarhub.com}
         VITE_MESSAGING_API_PREFIX: ${VITE_MESSAGING_API_PREFIX:-/api/v1/messaging}
         VITE_MESSAGING_SOCKET_URL: ${VITE_MESSAGING_SOCKET_URL:-https://cecarhub.com}
@@ -14,7 +14,7 @@ services:
     ports:
       - "127.0.0.1:8088:80"
     environment:
-      - VITE_GATEWAY_BASE_URL=${VITE_GATEWAY_BASE_URL:-https://cecarhub.com/api/v1}
+      - VITE_GATEWAY_BASE_URL=${VITE_GATEWAY_BASE_URL:-https://cecarhub.com}
     depends_on:
       - gateway
       - messaging
