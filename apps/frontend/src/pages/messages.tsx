@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { useInstitutionalSessionGuard } from '@/lib/auth-policy'
 import { useSession } from '@/lib/auth'
 import {
   type BasicUser,
@@ -28,6 +29,7 @@ import { cn } from '@/lib/utils'
 
 export default function MessagesPage() {
   const { data, isPending } = useSession()
+  const { isBlocking, isInstitutionalUser } = useInstitutionalSessionGuard(data, isPending)
   const userId = data?.user?.id
   const [searchParams, setSearchParams] = useSearchParams()
   const [conversations, setConversations] = React.useState<Conversation[]>([])
@@ -360,7 +362,7 @@ export default function MessagesPage() {
     setSearchParams({})
   }
 
-  if (isPending) {
+  if (isPending || isBlocking) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-background">
         <div className="rounded-full border bg-background px-4 py-2 text-sm text-muted-foreground shadow-sm">
@@ -372,6 +374,10 @@ export default function MessagesPage() {
 
   if (!data?.user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (!isInstitutionalUser) {
+    return null
   }
 
   const activeConversation = conversations.find(

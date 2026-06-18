@@ -47,6 +47,10 @@ app.get("/internal/v1/validate-session", async (c) => {
   if (!session) {
     return c.json({ error: "invalid_session" }, 401);
   }
+
+  if (!isInstitutionalEmail(session.user.email)) {
+    return c.json({ error: "forbidden_email" }, 403);
+  }
   
   return c.json({
     userId: session.user.id,

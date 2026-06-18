@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { GraduationCap, ShieldCheck } from "lucide-react"
 import { authClient } from "@/lib/auth"
@@ -27,9 +27,17 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
-export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
-  const [error, setError] = useState("")
+interface LoginFormProps extends React.ComponentProps<"div"> {
+  initialError?: string
+}
+
+export function LoginForm({ className, initialError = "", ...props }: LoginFormProps) {
+  const [error, setError] = useState(initialError)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setError(initialError)
+  }, [initialError])
 
   async function handleGoogleSignIn() {
     setError("")

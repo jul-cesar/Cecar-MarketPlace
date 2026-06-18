@@ -36,6 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useInstitutionalSessionGuard } from "@/lib/auth-policy"
 import { useSession } from "@/lib/auth"
 import {
   fetchAdminUsers,
@@ -52,8 +53,9 @@ import {
 
 export default function AdminPage() {
   const { data, isPending } = useSession()
+  const { isBlocking, isInstitutionalUser } = useInstitutionalSessionGuard(data, isPending)
 
-  if (isPending) {
+  if (isPending || isBlocking) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -63,6 +65,10 @@ export default function AdminPage() {
 
   if (!data?.user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (!isInstitutionalUser) {
+    return null
   }
 
   const user = data.user as typeof data.user & { role?: string | null }

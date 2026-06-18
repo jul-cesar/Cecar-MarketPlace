@@ -17,6 +17,7 @@ import { MarketplaceNavbar } from "@/components/MarketplaceNavbar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { apiRoutes } from "@/lib/api"
+import { useInstitutionalSessionGuard } from "@/lib/auth-policy"
 import { useSession } from "@/lib/auth"
 import { createConversation } from "@/lib/messaging"
 import { deleteImageFiles } from "@/lib/uploadthing"
@@ -31,6 +32,7 @@ export default function ListingDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { data, isPending } = useSession()
+  const { isBlocking, isInstitutionalUser } = useInstitutionalSessionGuard(data, isPending)
   const [listing, setListing] = React.useState<ListingDetailResponse | null>(null)
   const [author, setAuthor] = React.useState<BasicUser | null>(null)
   const [isLoadingListing, setIsLoadingListing] = React.useState(true)
@@ -153,7 +155,7 @@ export default function ListingDetailPage() {
     }
   }
 
-  if (isPending) {
+  if (isPending || isBlocking) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-background">
         <div className="rounded-full border bg-background px-4 py-2 text-sm text-muted-foreground shadow-sm">
@@ -165,6 +167,10 @@ export default function ListingDetailPage() {
 
   if (!data?.user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (!isInstitutionalUser) {
+    return null
   }
 
   const isOwner = listing?.sellerId === data.user.id

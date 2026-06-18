@@ -36,6 +36,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { type CategoryResponse } from "@/lib/mock-marketplace"
 import { apiRoutes } from "@/lib/api"
+import { useInstitutionalSessionGuard } from "@/lib/auth-policy"
 import { useSession } from "@/lib/auth"
 import { useUploadThing, deleteImageFiles } from "@/lib/uploadthing"
 import { cn } from "@/lib/utils"
@@ -129,6 +130,7 @@ type ListingFormValues = z.infer<typeof formSchema>
 
 export default function CreateListingPage() {
   const { data, isPending } = useSession()
+  const { isBlocking, isInstitutionalUser } = useInstitutionalSessionGuard(data, isPending)
   const navigate = useNavigate()
   const [categories, setCategories] = React.useState<CategoryResponse[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = React.useState(true)
@@ -315,7 +317,7 @@ export default function CreateListingPage() {
     )
   }
 
-  if (isPending) {
+  if (isPending || isBlocking) {
     return (
       <div className="flex min-h-svh items-center justify-center ">
         <div className="rounded-full border bg-background/80 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur">
@@ -327,6 +329,10 @@ export default function CreateListingPage() {
 
   if (!data?.user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (!isInstitutionalUser) {
+    return null
   }
 
   return (

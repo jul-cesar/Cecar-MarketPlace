@@ -9,6 +9,7 @@ import { MarketplaceNavbar } from "@/components/MarketplaceNavbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiRoutes } from "@/lib/api";
+import { useInstitutionalSessionGuard } from "@/lib/auth-policy";
 import { useSession } from "@/lib/auth";
 import {
   type CategoryResponse,
@@ -37,6 +38,7 @@ interface PageResponse<T> {
 
 export default function HomePage() {
   const { data, isPending } = useSession();
+  const { isBlocking, isInstitutionalUser } = useInstitutionalSessionGuard(data, isPending)
   const [query, setQuery] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [selectedType, setSelectedType] =
@@ -141,7 +143,7 @@ export default function HomePage() {
     });
   }
 
-  if (isPending) {
+  if (isPending || isBlocking) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-[radial-gradient(circle_at_top,var(--color-primary)_0,transparent_32rem)]">
         <div className="rounded-full border bg-background/80 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur">
@@ -153,6 +155,10 @@ export default function HomePage() {
 
   if (!data?.user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!isInstitutionalUser) {
+    return null
   }
 
   return (
