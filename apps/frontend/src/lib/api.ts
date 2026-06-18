@@ -1,8 +1,13 @@
+const configuredGatewayBaseUrl =
+  typeof import.meta !== 'undefined' && import.meta.env
+    ? import.meta.env.VITE_GATEWAY_BASE_URL
+    : undefined
+
 export function normalizeGatewayBaseUrl(value?: string) {
   return (value?.replace(/\/$/, '') ?? 'http://localhost:8080').replace(/\/api\/v1$/, '')
 }
 
-const gatewayBaseUrl = normalizeGatewayBaseUrl(import.meta.env.VITE_GATEWAY_BASE_URL)
+const gatewayBaseUrl = normalizeGatewayBaseUrl(configuredGatewayBaseUrl)
 
 const messagingBaseUrl =
   import.meta.env.VITE_MESSAGING_BASE_URL?.replace(/\/$/, '') ??

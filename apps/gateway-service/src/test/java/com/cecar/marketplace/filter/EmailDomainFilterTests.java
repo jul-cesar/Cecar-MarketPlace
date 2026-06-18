@@ -1,6 +1,7 @@
 package com.cecar.marketplace.filter;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -38,6 +39,6 @@ class EmailDomainFilterTests {
         filter.doFilter(request, response, chain);
 
         assertEquals(200, response.getStatus());
-        assertEquals(request.getRequestURI(), chain.getRequest().getRequestURI());
+        assertEquals(request.getRequestURI(), ((HttpServletRequest) chain.getRequest()).getRequestURI());
     }
 }

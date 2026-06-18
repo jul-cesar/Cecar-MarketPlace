@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildUploadLogPayload } from "../src/lib/upload-log.ts";
+import { buildUploadLogPayload } from "../src/lib/upload-log";
 
 test("buildUploadLogPayload returns serializable upload info", () => {
   assert.deepEqual(
