@@ -38,6 +38,6 @@ class EmailDomainFilterTests {
         filter.doFilter(request, response, chain);
 
         assertEquals(200, response.getStatus());
-        assertEquals(request.getRequestURI(), ((MockHttpServletRequest) chain.getRequest()).getRequestURI());
+        assertEquals(request.getRequestURI(), chain.getRequest().getRequestURI());
     }
 }
