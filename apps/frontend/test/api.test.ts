@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 
-import { gatewayUrl, normalizeGatewayBaseUrl } from "../src/lib/api"
+import { gatewayUrl, normalizeGatewayBaseUrl } from "../src/lib/api.js"
 
 test("normalizeGatewayBaseUrl removes duplicated api prefix", () => {
   assert.equal(

@@ -3,6 +3,20 @@ const configuredGatewayBaseUrl =
     ? import.meta.env.VITE_GATEWAY_BASE_URL
     : undefined
 
+const configuredMessagingBaseUrl =
+  typeof import.meta !== 'undefined' && import.meta.env
+    ? import.meta.env.VITE_MESSAGING_BASE_URL
+    : undefined
+
+const configuredMessagingApiPrefix =
+  typeof import.meta !== 'undefined' && import.meta.env
+    ? import.meta.env.VITE_MESSAGING_API_PREFIX
+    : undefined
+
+const isDev = typeof import.meta !== 'undefined' && import.meta.env
+  ? import.meta.env.DEV
+  : false
+
 export function normalizeGatewayBaseUrl(value?: string) {
   return (value?.replace(/\/$/, '') ?? 'http://localhost:8080').replace(/\/api\/v1$/, '')
 }
@@ -10,12 +24,12 @@ export function normalizeGatewayBaseUrl(value?: string) {
 const gatewayBaseUrl = normalizeGatewayBaseUrl(configuredGatewayBaseUrl)
 
 const messagingBaseUrl =
-  import.meta.env.VITE_MESSAGING_BASE_URL?.replace(/\/$/, '') ??
-  (import.meta.env.DEV ? 'http://localhost:3002' : gatewayBaseUrl)
+  configuredMessagingBaseUrl?.replace(/\/$/, '') ??
+  (isDev ? 'http://localhost:3002' : gatewayBaseUrl)
 
 const messagingApiPrefix =
-  import.meta.env.VITE_MESSAGING_API_PREFIX ??
-  (import.meta.env.DEV ? '' : '/api/v1/messaging')
+  configuredMessagingApiPrefix ??
+  (isDev ? '' : '/api/v1/messaging')
 
 function messagingUrl(path: string) {
   return `${messagingBaseUrl}${messagingApiPrefix}${path.startsWith('/') ? path : '/' + path}`
@@ -47,7 +61,7 @@ export const apiRoutes = {
       messagingUrl(`/conversations/${conversationId}/messages`),
     conversationRead: (conversationId: string) =>
       messagingUrl(`/conversations/${conversationId}/read`),
-    socketPath: import.meta.env.DEV ? '/socket.io' : '/api/v1/messaging/socket.io',
+    socketPath: isDev ? '/socket.io' : '/api/v1/messaging/socket.io',
   },
   admin: {
     users: gatewayUrl('/api/v1/admin/users'),

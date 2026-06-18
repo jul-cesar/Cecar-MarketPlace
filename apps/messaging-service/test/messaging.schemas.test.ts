@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   listQuerySchema,
   sendMessageSchema,
-} from "../src/schemas/messaging.schemas";
+} from "../src/schemas/messaging.schemas.js";
 
 test("listQuerySchema applies default limit", () => {
   const parsed = listQuerySchema.parse({});
