@@ -1,6 +1,8 @@
-const gatewayBaseUrl =
-  (import.meta.env.VITE_GATEWAY_BASE_URL?.replace(/\/$/, '') ??
-    'http://localhost:8080').replace(/\/api\/v1$/, '')
+export function normalizeGatewayBaseUrl(value?: string) {
+  return (value?.replace(/\/$/, '') ?? 'http://localhost:8080').replace(/\/api\/v1$/, '')
+}
+
+const gatewayBaseUrl = normalizeGatewayBaseUrl(import.meta.env.VITE_GATEWAY_BASE_URL)
 
 const messagingBaseUrl =
   import.meta.env.VITE_MESSAGING_BASE_URL?.replace(/\/$/, '') ??

@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +17,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 @Component
@@ -39,8 +44,8 @@ public class EmailDomainFilter extends OncePerRequestFilter {
             return;
         }
 
-        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
-        byte[] body = wrappedRequest.getContentAsByteArray();
+        CachedBodyRequestWrapper wrappedRequest = new CachedBodyRequestWrapper(request);
+        byte[] body = wrappedRequest.getCachedBody();
 
         if (body.length > 0) {
             String bodyStr = new String(body, StandardCharsets.UTF_8);
@@ -73,5 +78,48 @@ public class EmailDomainFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return HttpMethod.OPTIONS.matches(request.getMethod());
+    }
+
+    private static class CachedBodyRequestWrapper extends HttpServletRequestWrapper {
+        private final byte[] cachedBody;
+
+        private CachedBodyRequestWrapper(HttpServletRequest request) throws IOException {
+            super(request);
+            this.cachedBody = request.getInputStream().readAllBytes();
+        }
+
+        private byte[] getCachedBody() {
+            return cachedBody;
+        }
+
+        @Override
+        public ServletInputStream getInputStream() {
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(cachedBody);
+            return new ServletInputStream() {
+                @Override
+                public int read() {
+                    return inputStream.read();
+                }
+
+                @Override
+                public boolean isFinished() {
+                    return inputStream.available() == 0;
+                }
+
+                @Override
+                public boolean isReady() {
+                    return true;
+                }
+
+                @Override
+                public void setReadListener(ReadListener readListener) {
+                }
+            };
+        }
+
+        @Override
+        public BufferedReader getReader() {
+            return new BufferedReader(new InputStreamReader(getInputStream(), StandardCharsets.UTF_8));
+        }
     }
 }

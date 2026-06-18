@@ -6,13 +6,12 @@ import { inArray } from 'drizzle-orm'
 import { auth } from './lib/auth.js';
 import { db } from './db/index.js';
 import { user } from './db/schema.js';
+import { isInstitutionalEmail } from './lib/email-policy.js';
 
 console.log('[identity-service] BETTER_AUTH_URL:', process.env.BETTER_AUTH_URL);
 console.log('[identity-service] GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'MISSING');
 console.log('[identity-service] GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'MISSING');
 console.log('[identity-service] FRONTEND_URL:', process.env.FRONTEND_URL);
-
-const ALLOWED_EMAIL_DOMAIN = '@cecar.edu.co';
 
 const app = new Hono()
 
@@ -25,7 +24,7 @@ app.use("/auth/*", async (c, next) => {
       const cloned = c.req.raw.clone();
       const body = await cloned.json();
       const email: string | undefined = body?.email;
-      if (email && !email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
+      if (!isInstitutionalEmail(email)) {
         return c.json(
           { error: 'forbidden', message: 'Solo se permiten correos institucionales (@cecar.edu.co)' },
           403

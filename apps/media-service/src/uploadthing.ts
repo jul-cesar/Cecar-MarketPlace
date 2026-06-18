@@ -1,4 +1,5 @@
 import { createUploadthing, type FileRouter } from "uploadthing/server";
+import { buildUploadLogPayload } from "./lib/upload-log.js";
 
 const f = createUploadthing();
 
@@ -9,12 +10,7 @@ export const uploadRouter = {
       maxFileCount: 10,
     },
   }).onUploadComplete(({ file }) => {
-    console.log("[media-service] upload completed", {
-      key: file.key,
-      name: file.name,
-      size: file.size,
-      url: file.url,
-    });
+    console.log("[media-service] upload completed", buildUploadLogPayload(file));
   }),
 } satisfies FileRouter;
 
