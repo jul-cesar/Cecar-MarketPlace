@@ -33,7 +33,7 @@ public class AdminAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (!"ADMIN".equals(userRole)) {
+        if (userRole == null || !userRole.equalsIgnoreCase("admin")) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/problem+json");
             response.getWriter().write("""
