@@ -61,7 +61,11 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Define BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${FRONTEND_URL:?Define FRONTEND_URL}/api/v1/identity/auth
       FRONTEND_URL: ${FRONTEND_URL:?Define FRONTEND_URL}
-      DATABASE_URL: postgresql://cecar_identity:${IDENTITY_DATABASE_PASSWORD:?Define IDENTITY_DATABASE_PASSWORD}@cecar-postgres:5432/identity_db
+      PGHOST: cecar-postgres
+      PGPORT: "5432"
+      PGUSER: cecar_identity
+      PGPASSWORD: ${IDENTITY_DATABASE_PASSWORD:?Define IDENTITY_DATABASE_PASSWORD}
+      PGDATABASE: identity_db
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Define GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Define GOOGLE_CLIENT_SECRET}
     depends_on:
@@ -152,7 +156,11 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3002"
-      DATABASE_URL: postgresql://cecar_messaging:${MESSAGING_DATABASE_PASSWORD:?Define MESSAGING_DATABASE_PASSWORD}@cecar-postgres:5432/messaging_db
+      PGHOST: cecar-postgres
+      PGPORT: "5432"
+      PGUSER: cecar_messaging
+      PGPASSWORD: ${MESSAGING_DATABASE_PASSWORD:?Define MESSAGING_DATABASE_PASSWORD}
+      PGDATABASE: messaging_db
       IDENTITY_SERVICE_URL: http://cecar-identity:3000
       CATALOG_SERVICE_URL: http://cecar-catalog:8081
       FRONTEND_URL: ${FRONTEND_URL:?Define FRONTEND_URL}
