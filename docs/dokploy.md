@@ -6,7 +6,7 @@
 2. Selecciona `docker-compose.yml` en la raíz y conserva la raíz del repositorio como contexto. El script de inicialización necesita `infra/postgres/init-databases.sh`.
 3. Copia `.env.example` al apartado **Environment**. Sustituye todos los valores de ejemplo.
 4. Define `FRONTEND_URL` con el origen HTTPS público, **sin barra final ni ruta**; por ejemplo, `https://marketplace.example.com`.
-5. Genera cinco secretos independientes con `openssl rand -hex 32`: las cuatro contraseñas PostgreSQL y `BETTER_AUTH_SECRET`. Usa contraseñas hexadecimales: el Compose las incorpora a las URLs de conexión.
+5. Para una instalación nueva, genera cinco secretos independientes con `openssl rand -hex 32`: las cuatro contraseñas PostgreSQL y `BETTER_AUTH_SECRET`. Identity y Messaging reciben las contraseñas por `PGPASSWORD`, no dentro de una URL; admiten caracteres reservados. Si un valor contiene `$` o `#`, utiliza comillas simples en la sintaxis `.env` del panel para conservarlo literalmente. No cambies contraseñas de una instalación existente sin actualizar también los usuarios PostgreSQL.
 6. Configura Google OAuth y UploadThing. En Google registra este redirect, sustituyendo el dominio:
 
    ```text
@@ -37,15 +37,18 @@ Estos nombres funcionan entre los contenedores conectados a **`cecar-marketplace
 
 Admin administra usuarios y sesiones de Identity directamente en su base actual. Darle una base vacía independiente rompería esas operaciones. Separar ese acceso requiere cambiar la arquitectura, no solo el despliegue.
 
-Ejemplos internos, con la contraseña correspondiente:
+Identity recibe estos parámetros por separado; Messaging usa el mismo host y puerto, con `cecar_messaging` y `messaging_db`:
 
 ```text
-postgresql://cecar_identity:CONTRASENA@cecar-postgres:5432/identity_db
-jdbc:postgresql://cecar-postgres:5432/catalog_db
-postgresql://cecar_messaging:CONTRASENA@cecar-postgres:5432/messaging_db
+PGHOST=cecar-postgres
+PGPORT=5432
+PGUSER=cecar_identity
+PGDATABASE=identity_db
 ```
 
-Los servicios ya reciben sus conexiones en el Compose. Las aplicaciones no usan el usuario administrador `postgres`.
+`PGPASSWORD` recibe la contraseña existente del servicio. Catalog y Admin también reciben usuario y contraseña por separado, fuera de su URL JDBC.
+
+Los servicios ya reciben sus conexiones en el Compose. Las aplicaciones no usan el usuario administrador `postgres`. `DATABASE_URL` sigue disponible para desarrollo o conexiones externas, pero debe ser una URI válida con la contraseña codificada si contiene caracteres reservados; el Compose de producción no la necesita.
 
 ## Entrada HTTP
 
@@ -79,6 +82,14 @@ Esto prepara una instancia nueva; **no importa datos desde Neon u otra base**. S
 
 Los nombres fijos de contenedores, red y volumen permiten **una sola instalación de este stack por host**. No uses este Compose sin renombrarlos para un segundo entorno de pruebas en el mismo servidor.
 
+## Error `ERR_INVALID_URL` en Identity o Messaging
+
+El Compose anterior insertaba la contraseña directamente en `DATABASE_URL`. Caracteres como `/`, `#`, `?` o `%` podían invalidar esa URI antes de que el cliente intentara conectar.
+
+Usa el Compose actualizado, que pasa `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` y `PGDATABASE` tanto a las migraciones como al servidor. Elimina cualquier `DATABASE_URL` antigua añadida manualmente al entorno del contenedor: si está definida, tiene prioridad sobre las variables `PG*`. Reconstruye las imágenes y recrea los contenedores con el nuevo Compose, conservando las mismas contraseñas y el volumen PostgreSQL.
+
+No borres el volumen para resolver este error. No imprimas la URL ni la contraseña en logs o comandos de diagnóstico.
+
 ## Verificaciones
 
 Antes de desplegar, desde un entorno con Docker Compose y las variables configuradas:
@@ -104,7 +115,7 @@ psql -U postgres -d postgres -c '\l'
 Pruebas locales adicionales:
 
 ```sh
-node --test infra/postgres/init-databases.test.mjs
+node --test infra/postgres/*.test.mjs
 cd apps/identity-service && npm ci && npm test && npm run build
 # Desde la raiz, en otra terminal:
 cd apps/messaging-service && npm ci && npm test && npm run build
