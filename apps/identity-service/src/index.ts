@@ -37,7 +37,18 @@ app.use("/auth/*", async (c, next) => {
   return next();
 });
 
-app.all("/auth/*", async (c) => auth.handler(c.req.raw));
+app.all("/auth/*", async (c) => {
+  try {
+    const url = new URL(c.req.url);
+    const publicPath = new URL(process.env.BETTER_AUTH_URL || url.origin).pathname.replace(/\/$/, '');
+    // Better Auth matches its public base path, but the gateway strips the service prefix.
+    if (publicPath) url.pathname = publicPath + url.pathname.slice('/auth'.length);
+    return await auth.handler(new Request(url, c.req.raw));
+  } catch (error) {
+    console.error('[identity-service] Auth request failed', error);
+    return c.json({ error: 'auth_request_failed' }, 500);
+  }
+});
 
 app.get("/internal/v1/validate-session", async (c) => {
   const session = await auth.api.getSession({
@@ -106,7 +117,7 @@ app.get('/', (c) => {
 
 serve({
   fetch: app.fetch,
-  port: 3000
+  port: Number(process.env.PORT ?? 3000)
 }, (info) => {
   console.log(`Server is running on http://localhost:${info.port}`)
 })
