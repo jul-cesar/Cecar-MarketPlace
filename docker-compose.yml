@@ -1,133 +1,210 @@
 name: cecar-marketplace
 
 services:
-  frontend:
-    build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_GATEWAY_BASE_URL: ${VITE_GATEWAY_BASE_URL:-https://cecarhub.com}
-        VITE_MESSAGING_BASE_URL: ${VITE_MESSAGING_BASE_URL:-https://cecarhub.com}
-        VITE_MESSAGING_API_PREFIX: ${VITE_MESSAGING_API_PREFIX:-/api/v1/messaging}
-        VITE_MESSAGING_SOCKET_URL: ${VITE_MESSAGING_SOCKET_URL:-https://cecarhub.com}
-        VITE_MESSAGING_SOCKET_PATH: ${VITE_MESSAGING_SOCKET_PATH:-/socket.io}
-    ports:
-      - "127.0.0.1:8088:80"
+  postgres:
+    image: postgres:17-alpine
+    container_name: cecar-postgres
     environment:
-      - VITE_GATEWAY_BASE_URL=${VITE_GATEWAY_BASE_URL:-https://cecarhub.com}
-    depends_on:
-      - gateway
-      - messaging
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}
+      IDENTITY_DATABASE_PASSWORD: ${IDENTITY_DATABASE_PASSWORD:?Define IDENTITY_DATABASE_PASSWORD}
+      CATALOG_DATABASE_PASSWORD: ${CATALOG_DATABASE_PASSWORD:?Define CATALOG_DATABASE_PASSWORD}
+      MESSAGING_DATABASE_PASSWORD: ${MESSAGING_DATABASE_PASSWORD:?Define MESSAGING_DATABASE_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
+    healthcheck:
+      # TCP only: the temporary server used by init scripts listens on a Unix socket.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
     networks:
       - marketplace
     restart: unless-stopped
 
+  frontend:
+    container_name: cecar-frontend
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_GATEWAY_BASE_URL: ${FRONTEND_URL:?Define FRONTEND_URL}
+        VITE_MESSAGING_BASE_URL: ${FRONTEND_URL:?Define FRONTEND_URL}
+        VITE_MESSAGING_API_PREFIX: /api/v1/messaging
+        VITE_MESSAGING_SOCKET_URL: ${FRONTEND_URL:?Define FRONTEND_URL}
+        VITE_MESSAGING_SOCKET_PATH: /socket.io
+    expose:
+      - "80"
+    depends_on:
+      gateway:
+        condition: service_started
+      messaging:
+        condition: service_healthy
+    networks:
+      - marketplace
+      - dokploy-network
+    restart: unless-stopped
+
   identity:
+    container_name: cecar-identity
     build:
       context: ./apps/identity-service
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+    command: ["sh", "-c", "node dist/db/migrate.js && exec node dist/index.js"]
+    expose:
+      - "3000"
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL}
-      - FRONTEND_URL=${FRONTEND_URL}
-      - DATABASE_URL=${IDENTITY_DATABASE_URL}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      NODE_ENV: production
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Define BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${FRONTEND_URL:?Define FRONTEND_URL}/api/v1/identity/auth
+      FRONTEND_URL: ${FRONTEND_URL:?Define FRONTEND_URL}
+      DATABASE_URL: postgresql://cecar_identity:${IDENTITY_DATABASE_PASSWORD:?Define IDENTITY_DATABASE_PASSWORD}@cecar-postgres:5432/identity_db
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Define GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Define GOOGLE_CLIENT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     networks:
       - marketplace
     restart: unless-stopped
 
   gateway:
+    container_name: cecar-gateway
     build:
       context: ./apps/gateway-service
       dockerfile: Dockerfile
-    ports:
-      - "127.0.0.1:8080:8080"
+    expose:
+      - "8080"
     environment:
-      - identity-service.url=http://identity:3000
-      - catalog-service.url=http://catalog:8081
-      - media-service.url=http://media:3001
-      - messaging-service.url=http://messaging:3002
-      - admin-service.url=http://admin:8082
-      - frontend.url=${FRONTEND_URL:-https://cecarhub.com}
+      identity-service.url: http://cecar-identity:3000
+      catalog-service.url: http://cecar-catalog:8081
+      media-service.url: http://cecar-media:3001
+      messaging-service.url: http://cecar-messaging:3002
+      admin-service.url: http://cecar-admin:8082
+      frontend.url: ${FRONTEND_URL:?Define FRONTEND_URL}
     depends_on:
-      - identity
-      - catalog
-      - media
-      - messaging
-      - admin
+      identity:
+        condition: service_healthy
+      catalog:
+        condition: service_started
+      media:
+        condition: service_started
+      messaging:
+        condition: service_healthy
+      admin:
+        condition: service_started
     networks:
       - marketplace
     restart: unless-stopped
 
   catalog:
+    container_name: cecar-catalog
     build:
       context: ./apps/catalog-service
       dockerfile: Dockerfile
     expose:
       - "8081"
     environment:
-      - SPRING_DATASOURCE_URL=${CATALOG_DATABASE_URL}
-      - SPRING_DATASOURCE_USERNAME=${CATALOG_DATABASE_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${CATALOG_DATABASE_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://cecar-postgres:5432/catalog_db
+      SPRING_DATASOURCE_USERNAME: cecar_catalog
+      SPRING_DATASOURCE_PASSWORD: ${CATALOG_DATABASE_PASSWORD:?Define CATALOG_DATABASE_PASSWORD}
+      SPRING_JPA_SHOW_SQL: "false"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: never
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - marketplace
     restart: unless-stopped
 
   media:
+    container_name: cecar-media
     build:
       context: ./apps/media-service
       dockerfile: Dockerfile
     expose:
       - "3001"
     environment:
-      - UPLOADTHING_TOKEN=${UPLOADTHING_TOKEN}
+      NODE_ENV: production
+      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN:?Define UPLOADTHING_TOKEN}
+      UPLOADTHING_CALLBACK_URL: ${FRONTEND_URL:?Define FRONTEND_URL}/api/v1/media
     networks:
       - marketplace
     restart: unless-stopped
 
   messaging:
+    container_name: cecar-messaging
     build:
       context: ./apps/messaging-service
       dockerfile: Dockerfile
-    ports:
-      - "127.0.0.1:3002:3002"
+    command: ["sh", "-c", "node dist/db/migrate.js && exec node dist/index.js"]
+    expose:
+      - "3002"
     environment:
-      - NODE_ENV=${NODE_ENV:-production}
-      - PORT=3002
-      - DATABASE_URL=${MESSAGING_DATABASE_URL}
-      - IDENTITY_SERVICE_URL=http://identity:3000
-      - CATALOG_SERVICE_URL=http://catalog:8081
-      - FRONTEND_URL=${FRONTEND_URL:-https://cecarhub.com}
-      - ENABLE_SERVICE_CORS=false
+      NODE_ENV: production
+      PORT: "3002"
+      DATABASE_URL: postgresql://cecar_messaging:${MESSAGING_DATABASE_PASSWORD:?Define MESSAGING_DATABASE_PASSWORD}@cecar-postgres:5432/messaging_db
+      IDENTITY_SERVICE_URL: http://cecar-identity:3000
+      CATALOG_SERVICE_URL: http://cecar-catalog:8081
+      FRONTEND_URL: ${FRONTEND_URL:?Define FRONTEND_URL}
+      ENABLE_SERVICE_CORS: "false"
     depends_on:
-      - identity
-      - catalog
+      postgres:
+        condition: service_healthy
+      identity:
+        condition: service_healthy
+      catalog:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     networks:
       - marketplace
     restart: unless-stopped
 
   admin:
+    container_name: cecar-admin
     build:
       context: ./apps/admin-service
       dockerfile: Dockerfile
     expose:
       - "8082"
     environment:
-      - SPRING_DATASOURCE_URL=${IDENTITY_DATABASE_URL_JDBC:-jdbc:postgresql://localhost:5432/identity}
-      - SPRING_DATASOURCE_USERNAME=${IDENTITY_DATABASE_USERNAME:-postgres}
-      - SPRING_DATASOURCE_PASSWORD=${IDENTITY_DATABASE_PASSWORD:-postgres}
-      - CATALOG_SERVICE_URL=http://catalog:8081
+      # Admin currently manages Identity users and sessions directly.
+      SPRING_DATASOURCE_URL: jdbc:postgresql://cecar-postgres:5432/identity_db
+      SPRING_DATASOURCE_USERNAME: cecar_identity
+      SPRING_DATASOURCE_PASSWORD: ${IDENTITY_DATABASE_PASSWORD:?Define IDENTITY_DATABASE_PASSWORD}
+      CATALOG_SERVICE_URL: http://cecar-catalog:8081
+      SPRING_JPA_SHOW_SQL: "false"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: never
     depends_on:
-      - identity
-      - catalog
+      identity:
+        condition: service_healthy
+      catalog:
+        condition: service_started
     networks:
       - marketplace
     restart: unless-stopped
 
+volumes:
+  postgres-data:
+    name: cecar-postgres-data
+
 networks:
   marketplace:
+    name: cecar-marketplace-internal
     driver: bridge
+  dokploy-network:
+    external: true

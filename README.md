@@ -1,5 +1,7 @@
 # Marketplace CECAR --- Contexto Maestro para Agente y Team (v0.1)
 
+Despliegue: [guía para Dokploy con Docker Compose](docs/dokploy.md).
+
 # 1. Proyecto
 
 Marketplace institucional para la comunidad CECAR (estudiantes, docentes
